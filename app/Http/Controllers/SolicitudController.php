@@ -95,13 +95,14 @@ class SolicitudController extends Controller
             'parroquia_id' => 'required|integer', // Asumiendo que tienes un select
             'email' => 'nullable|email',
             
-            'nro_uac' => 'required|string|unique:solicitud,Nro.UAC',
+            'nro_uac' => 'nullable|string|max:50|unique:solicitud,Nro.UAC',
             'tipo_solicitud_planilla' => 'required|string', // Enum
             'descripcion' => 'required|string',
             'tipo_solicitante' => 'required|string', // Enum
             'nivel_urgencia' => 'required|string', // Enum
             
             'instruccion_presidencia' => 'nullable|string',
+            'descripcion' => 'required|string',
             'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240' // max 10MB
         ]);
 
