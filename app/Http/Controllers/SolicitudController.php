@@ -102,7 +102,7 @@ class SolicitudController extends Controller
             'nivel_urgencia' => 'required|string', // Enum
             
             'instruccion_presidencia' => 'nullable|string',
-            'descripcion' => 'required|string',
+
             'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240' // max 10MB
         ]);
 
@@ -121,6 +121,7 @@ class SolicitudController extends Controller
                     'CorreoElectronicoPersona' => $validatedData['email'] ?? '',
                     'FechaNacPersona' => $request->fecha_nacimiento ?? now(), // Asumir default
                     'SexoPersona' => $request->sexo ?? 'N', // Asumir default
+                    
                 ]
             );
 
