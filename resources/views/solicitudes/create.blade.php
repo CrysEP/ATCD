@@ -1,4 +1,4 @@
-@extends('app') @section('content')
+@extends('layouts.app') @section('content')
     <header class="bg-white shadow">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -143,7 +143,8 @@
                                 @enderror
                             </div>
                             
-                            </div> <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                              <div>
                                 <label for="municipio_select" class="block font-medium text-sm text-gray-700">Municipio *</label>
                                 <select id="municipio_select" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" required>
@@ -174,16 +175,39 @@
                                 @error('descripcion')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
+                            </div> 
+
+                            <h3 class="text-lg font-semibold border-b pb-2 mb-4 mt-8">Funcionario Responsable (Receptor)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-lg border">
+                            
+                            <div>
+                                <label class="block font-medium text-sm text-gray-500">Registrado por:</label>
+                                <input type="text" 
+                                       value="{{ Auth::user()->persona->NombresPersona ?? Auth::user()->NombreUsuario }} {{ Auth::user()->persona->ApellidosPersona ?? '' }}" 
+                                       class="block mt-1 w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" 
+                                       disabled>
                             </div>
 
                             <div>
-                                <label for="instruccion_presidencia" class="block font-medium text-sm text-gray-700">Instrucción de Presidencia (Opcional)</label>
-                                <textarea name="instruccion_presidencia" id="instruccion_presidencia" rows="3" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">{{ old('instruccion_presidencia') }}</textarea>
-                                @error('instruccion_presidencia')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            
+                                    <label for="fecha_atencion" class="block font-medium text-sm text-gray-700">Fecha y Hora de Recepción *</label>
+                                    <input type="datetime-local" 
+                                        name="fecha_atencion"
+                                        id="fecha_atencion"
+                                        value="{{ old('fecha_atencion', now()->format('Y-m-d\TH:i')) }}" 
+                                        class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" 
+                                        required>
+                                   
+                                    @error('fecha_atencion')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                            <div>
+
+                        
+
+                 
+
                             <div>
                                 <label for="archivos" class="block font-medium text-sm text-gray-700">Anexar Documentos (Opcional)</label>
                                 <input type="file" name="archivos[]" id="archivos" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
@@ -196,6 +220,7 @@
                                 Registrar Solicitud
                             </button>
                         </div>
+                
 
                     </form>
                     </div>
@@ -264,7 +289,7 @@
                 @endforeach
             @endforeach
             
-            // 3. Si encontramos el municipio, lo pre-seleccionamos
+            // 3. Si encontramos el municipio, lo preseleccionamos
             if (selectedMunicipio) {
                 municipioSelect.value = selectedMunicipio;
                 // 4. Poblamos las parroquias de ese municipio

@@ -1,11 +1,16 @@
 <?php
 
-namespace App\Models\Models;
+namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TipoEnte extends Model
 {
-    use HasFactory;
+    // Le decimos a Laravel que use el nombre singular
+    protected $table = 'tipo_ente'; 
+    
+    protected $primaryKey = 'CodTipoEnte';
+    public $timestamps = false;
+
+    protected $fillable = ['NombreEnte', 'PrefijoCodigo', 'ContadorActual'];
 }

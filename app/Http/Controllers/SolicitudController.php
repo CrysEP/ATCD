@@ -7,9 +7,13 @@ use App\Models\Solicitud;
 use App\Models\Persona;
 use App\Models\RelacionCorrespondencia;
 use App\Models\StatusSolicitud;
+use App\Models\TipoEnte; 
+use App\Models\Municipio;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+
+
 
 class SolicitudController extends Controller
 {
@@ -72,12 +76,15 @@ class SolicitudController extends Controller
     /**
      * Muestra el formulario para crear una nueva solicitud.
      */
-    public function create()
+  public function create()
     {
-        // Aquí cargarías catálogos, ej:
-        // $municipios = Municipio::all();
-        // $tipos_solicitud = ...
-        return view('solicitudes.create');
+        // 1. Cargar los datos de la BD
+        $tiposEnte = TipoEnte::all(['CodTipoEnte', 'NombreEnte']);
+        $municipios = Municipio::with('parroquias:CodParroquia,NombreParroquia,Municipio_FK')
+                        ->get(['CodMunicipio', 'NombreMunicipio']);
+
+        // 2. Retornar la vista NUEVA pasando los datos
+        return view('solicitudes.create', compact('tiposEnte', 'municipios'));
     }
 
     /**
@@ -103,7 +110,8 @@ class SolicitudController extends Controller
             
             'instruccion_presidencia' => 'nullable|string',
 
-            'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240' // max 10MB
+            'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240', // max 10MB, por ahora o.o
+            'fecha_atencion' => 'required|date',   
         ]);
 
         // Iniciar transacción de base de datos
@@ -141,7 +149,7 @@ class SolicitudController extends Controller
                 'InstruccionPresidencia' => $validatedData['instruccion_presidencia'] ?? '',
                 'Observacion' => '',
                 'Gerencia_Jefatura' => '',
-                'StatusSolicitud_FK' => 1, // 1 = Pendiente (del seeder)
+                'StatusSolicitud_FK' => 1, // 1 = Pendiente (del seeder o.o)
             ]);
 
             // --- 4. Crear la Solicitud ---
@@ -149,11 +157,12 @@ class SolicitudController extends Controller
                 'TipoSolicitudPlanilla' => $validatedData['tipo_solicitud_planilla'],
                 'DescripcionSolicitud' => $validatedData['descripcion'],
                 'FechaSolicitud' => now(),
+                'FechaAtención' => $validatedData['fecha_atencion'],
                 'TipoSolicitante' => $validatedData['tipo_solicitante'],
                 'NivelUrgencia' => $validatedData['nivel_urgencia'],
-                'FechaAtención' => now(), // Opcional, ajustar
+      
                 'AnexaDocumentos' => $request->hasFile('archivos'),
-                'CantidadDocumentosOriginal' => 0, // Ajustar si es necesario
+                'CantidadDocumentosOriginal' => 0, // Ajustar si es necesario, si no pues miau
                 'CantidadDocumentoCopia' => 0, // Ajustar si es necesario
                 'CantidadPaginasAnexo' => 0, // Ajustar si es necesario
                 'CedulaPersona_FK' => $persona->CedulaPersona,

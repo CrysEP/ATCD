@@ -17,4 +17,11 @@ class Municipio extends Model
     {
         return $this->belongsTo(Estado::class, 'Estado_FK', 'CodEstado');
     }
+
+
+public function parroquias()
+    {
+        return $this->hasMany(Parroquia::class, 'Municipio_FK', 'CodMunicipio');
+    }
+
 }

@@ -1,136 +1,159 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - Solicitudes Activas')
-
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Dashboard de Solicitudes Activas</h1>
-        <a href="{{ route('solicitudes.create') }}" class="btn-primario">
-            + Registrar Nueva Solicitud
-        </a>
-    </div>
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Agenda Digital de Solicitudes
+            </h2>
+            <a href="{{ route('solicitudes.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                + Nueva Solicitud
+            </a>
+        </div>
+    </header>
 
-    <!-- Barra de Filtros y Búsqueda -->
-    <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-        <form action="{{ route('dashboard') }}" method="GET">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label for="search" class="block text-sm font-medium text-gray-700">Buscar (Cód, C.I., Nombre, Nro.UAC)</label>
-                    <input type="text" name="search" id="search" value="{{ request('search') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
+            @if (session('success'))
+                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">¡Excelente!</strong>
+                    <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
-                <div>
-                    <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo de Solicitud</label>
-                    <select name="tipo" id="tipo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        <option value="">Todos</option>
-                        <option value="Solicitud o Petición" @selected(request('tipo') == 'Solicitud o Petición')>Solicitud o Petición</option>
-                        <option value="Quejas, reclamos o sugerencias" @selected(request('tipo') == 'Quejas, reclamos o sugerencias')>Quejas, reclamos o sugerencias</option>
-                        <option value="Denuncia" @selected(request('tipo') == 'Denuncia')>Denuncia</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="urgencia" class="block text-sm font-medium text-gray-700">Urgencia</label>
-                    <select name="urgencia" id="urgencia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        <option value="">Todas</option>
-                        <option value="Alto" @selected(request('urgencia') == 'Alto')>Alto</option>
-                        <option value="Medio" @selected(request('urgencia') == 'Medio')>Medio</option>
-                        <option value="Bajo" @selected(request('urgencia') == 'Bajo')>Bajo</option>
-                    </select>
-                </div>
-                <!-- Añadir filtro de municipio (requiere cargar Municipios) -->
-                <!--
-                <div>
-                    <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio</label>
-                    <select name="municipio" id="municipio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option value="">Todos</option>
-                        
-                    </select>
-                </div>
-                -->
-                <div class="self-end">
-                    <button type="submit" class="w-full btn-primario justify-center">Filtrar</button>
+            @endif
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+
+                    <div class="mb-6">
+                        <form method="GET" action="{{ route('dashboard') }}" class="flex gap-4">
+                            <div class="flex-1">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por código, cédula o nombre..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            </div>
+                            <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition">
+                                Buscar
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('dashboard') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition flex items-center">
+                                    Limpiar
+                                </a>
+                            @endif
+                        </form>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Código
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Fecha
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Solicitante
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Tipo / Urgencia
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Estado
+                                    </th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">Acciones</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse ($solicitudes as $solicitud)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $solicitud->correspondencia->CodigoInterno ?? 'S/C' }}
+                                            </div>
+                                            @if($solicitud->Nro_UAC)
+                                                <div class="text-xs text-gray-500">
+                                                    UAC: {{ $solicitud->Nro_UAC }}
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $solicitud->FechaSolicitud ? $solicitud->FechaSolicitud->format('d/m/Y') : 'N/A' }}
+                                            <div class="text-xs">
+                                                {{ $solicitud->FechaSolicitud ? $solicitud->FechaSolicitud->format('h:i A') : '' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $solicitud->persona->NombresPersona ?? '' }} {{ $solicitud->persona->ApellidosPersona ?? '' }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                C.I: {{ $solicitud->persona->CedulaPersona ?? 'N/A' }}
+                                            </div>
+                                            <div class="text-xs text-gray-400">
+                                                 {{ $solicitud->persona->parroquia->municipio->NombreMunicipio ?? '' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ $solicitud->TipoSolicitudPlanilla }}
+                                            </div>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                {{ $solicitud->NivelUrgencia === 'Alto' ? 'bg-red-100 text-red-800' : 
+                                                  ($solicitud->NivelUrgencia === 'Medio' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800') }}">
+                                                {{ $solicitud->NivelUrgencia }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            @php
+                                                $statusNombre = $solicitud->status->NombreStatusSolicitud ?? 'Desconocido';
+                                                $statusClass = match($statusNombre) {
+                                                    'Recibida' => 'bg-blue-100 text-blue-800',
+                                                    'En espera' => 'bg-yellow-100 text-yellow-800',
+                                                    'Aceptada' => 'bg-green-100 text-green-800',
+                                                    'Rechazada' => 'bg-red-100 text-red-800',
+                                                    'Respuesta parcial' => 'bg-purple-100 text-purple-800',
+                                                    'Resuelta' => 'bg-gray-100 text-gray-800',
+                                                    default => 'bg-gray-100 text-gray-800',
+                                                };
+                                            @endphp
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
+                                                {{ $statusNombre }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            {{-- Enlace temporal hasta que tengas la ruta 'show' lista --}}
+                                            <a href="#" class="text-indigo-600 hover:text-indigo-900 font-bold">
+                                                Ver Detalles →
+                                            </a>
+                                            {{-- Cuando tengas la ruta lista, usa esto: --}}
+                                            {{-- <a href="{{ route('solicitudes.show', $solicitud->CodSolucitud) }}" class="text-indigo-600 hover:text-indigo-900">Ver Detalles</a> --}}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <svg class="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                <p class="text-lg font-medium text-gray-900">No hay solicitudes pendientes</p>
+                                                <p class="text-sm text-gray-500">¡Buen trabajo! La agenda está despejada por ahora.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-6">
+                        {{ $solicitudes->links() }}
+                    </div>
+
                 </div>
             </div>
-        </form>
-    </div>
-
-    <!-- Barra visual (Ejemplo) -->
-    <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-        <h3 class="font-bold text-lg mb-2">Resumen de Estados</h3>
-        <!-- Aquí iría una barra de progreso o similar -->
-        <div class="flex space-x-2">
-            <div class="flex-1 bg-yellow-400 text-white text-center p-2 rounded-l-md">Pendientes ({{-- contador --}})</div>
-            <div class="flex-1 bg-blue-500 text-white text-center p-2">En Revisión ({{-- contador --}})</div>
-            <div class="flex-1 bg-green-500 text-white text-center p-2">Aceptadas ({{-- contador --}})</div>
-            <div class="flex-1 bg-red-500 text-white text-center p-2 rounded-r-md">Rechazadas ({{-- contador --}})</div>
         </div>
     </div>
-
-    <!-- Contenedor de Solicitudes Activas -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        
-        @forelse ($solicitudes as $solicitud)
-            
-            <!--
-            ================================================================
-            INICIO: Componente de Tarjeta de Solicitud (Basado en tu HTML)
-            ================================================================
-            -->
-            <div class="solicitud-card urgencia-{{ $solicitud->NivelUrgencia }}">
-                <div class="card-header">
-                    <span class="codigo">#{{ $solicitud->Nro_UAC }}</span>
-                    <span class="tipo">{{ $solicitud->TipoSolicitudPlanilla }}</span>
-                    <span class="badge urgencia-{{ $solicitud->NivelUrgencia }}">
-                        {{ $solicitud->NivelUrgencia }}
-                    </span>
-                </div>
-                <div class="card-body">
-                    <!-- Usamos el accesor NombreCompleto del modelo Persona -->
-                    <h6>{{ $solicitud->persona->NombreCompleto ?? 'N/A' }}</h6>
-                    <p class="descripcion-corta">{{ Str::limit($solicitud->DescripcionSolicitud, 100) }}</p>
-                    <div class="info-adicional">
-                        <small><strong>Tel:</strong> {{ $solicitud->persona->TelefonoPersona ?? 'N/A' }}</small>
-                        <small><strong>Fecha:</strong> {{ $solicitud->FechaSolicitud->format('d/m/Y') }}</small>
-                        <small><strong>Municipio:</strong> {{ $solicitud->persona->parroquia->municipio->NombreMunicipio ?? 'N/A' }}</small>
-                        <small><strong>Estado:</strong> <span class="font-bold">{{ $solicitud->status->NombreStatusSolicitud ?? 'N/A' }}</span></small>
-                    </div>
-                </div>
-                <div class="card-actions">
-                    <a href="{{ route('solicitudes.show', $solicitud->CodSolucitud) }}" class="btn btn-sm btn-primary ver-detalles" data-id="{{ $solicitud->CodSolucitud }}">
-                        👁️ Ver
-                    </a>
-                    
-                    <a href="tel:{{ $solicitud->persona->TelefonoPersona }}" class="btn btn-sm btn-success llamar-ciudadano"
-                       data-telefono="{{ $solicitud->persona->TelefonoPersona }}"
-                       data-nombre="{{ $solicitud->persona->NombresPersona }}">
-                        📞 Llamar
-                    </a>
-                    
-                    @if(auth()->user()->RolUsuario == 'Administrador')
-                    <!-- El botón de cambiar estado estará en la vista de detalle -->
-                    <a href="{{ route('solicitudes.show', $solicitud->CodSolucitud) }}#cambiar-estado" class="btn btn-sm btn-warning cambiar-estado" data-id="{{ $solicitud->CodSolucitud }}">
-                        ✏️ Estado
-                    </a>
-                    @endif
-                </div>
-            </div>
-            <!--
-            ================================================================
-            FIN: Componente de Tarjeta de Solicitud
-            ================================================================
-            -->
-
-        @empty
-            <div class="lg:col-span-2 xl:col-span-3 text-center bg-white p-12 rounded-lg shadow-sm">
-                <h3 class="text-xl font-medium text-gray-700">No se encontraron solicitudes activas.</h3>
-                <p class="text-gray-500 mt-2">Intenta ajustar los filtros o registra una nueva solicitud.</p>
-            </div>
-        @endforelse
-
-    </div>
-
-    <!-- Paginación -->
-    <div class="mt-8">
-        {{ $solicitudes->links() }}
-    </div>
-
 @endsection
