@@ -10,13 +10,14 @@ use App\Http\Controllers\SolicitudController;
 |--------------------------------------------------------------------------
 */
 
+
 // --- RUTAS PÚBLICAS ---
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // --- RUTAS PROTEGIDAS ---
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'can:es-admin'])->group(function () {
 
     // Agenda Digital (Dashboard)
     Route::get('/', [SolicitudController::class, 'index'])->name('dashboard');
@@ -32,3 +33,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+
+// Auth::routes();
+
+// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

@@ -3,52 +3,59 @@
 @section('title', 'Historial de Solicitudes')
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Historial de Solicitudes Resueltas</h1>
-        <a href="{{ route('dashboard') }}" class="text-blue-600 hover:text-blue-800">&larr; Volver al Dashboard</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Historial de Solicitudes Resueltas</h2>
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">&larr; Volver a la Agenda Digital</a>
     </div>
 
-    <!-- Aquí podrías añadir filtros de fecha -->
-
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nro. UAC</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudadano</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Solicitud</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse ($solicitudes as $solicitud)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-primario">{{ $solicitud->Nro_UAC }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $solicitud->persona->NombreCompleto }}</td>
-                    <td class="px-6 py-4 max-w-sm text-sm text-gray-500 truncate">{{ $solicitud->DescripcionSolicitud }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $solicitud->FechaSolicitud->format('d/m/Y') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            {{ $solicitud->status->NombreStatusSolicitud }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="{{ route('solicitudes.show', $solicitud->CodSolucitud) }}" class="text-indigo-600 hover:text-indigo-900">Ver</a>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">No se encontraron solicitudes resueltas.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Paginación -->
-    <div class="mt-8">
-        {{ $solicitudes->links() }}
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">Nro. UAC</th>
+                            <th scope="col">Ciudadano</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col">Fecha Solicitud</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($solicitudes as $solicitud)
+                        <tr>
+                            <td class="fw-bold text-primary">{{ $solicitud->Nro_UAC ?? $solicitud->CodSolucitud }}</td>
+                            <td>{{ $solicitud->persona->NombreCompleto }}</td>
+                            <td>{{ \Illuminate\Support\Str::limit($solicitud->DescripcionSolicitud, 70) }}</td>
+                            <td>{{ $solicitud->FechaSolicitud->format('d/m/Y') }}</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    {{ $solicitud->status->NombreStatusSolicitud }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ route('solicitudes.show', $solicitud->CodSolucitud) }}" class="btn btn-sm btn-outline-primary">
+                                    Ver
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center p-5 text-muted">
+                                No se encontraron solicitudes resueltas en el historial.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        @if ($solicitudes->hasPages())
+            <div class="card-footer d-flex justify-content-center">
+                {{ $solicitudes->links() }}
+            </div>
+        @endif
     </div>
 @endsection

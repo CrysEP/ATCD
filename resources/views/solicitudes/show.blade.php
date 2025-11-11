@@ -1,134 +1,161 @@
 @extends('layouts.app')
 
-@section('title', 'Detalle de Solicitud #' . $solicitud->Nro_UAC)
+@section('title', 'Detalle de Solicitud #' . ($solicitud->Nro_UAC ?? $solicitud->CodSolucitud))
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">Solicitud #{{ $solicitud->Nro_UAC }}</h1>
-            <span class="text-xl text-gray-600">Nivel de Urgencia: 
-                <span class="font-bold p-1 rounded
-                    @if($solicitud->NivelUrgencia == 'Alto') bg-red-100 text-red-700 @endif
-                    @if($solicitud->NivelUrgencia == 'Medio') bg-yellow-100 text-yellow-700 @endif
-                    @if($solicitud->NivelUrgencia == 'Bajo') bg-green-100 text-green-700 @endif
-                ">
-                    {{ $solicitud->NivelUrgencia }}
-                </span>
-            </span>
-        </div>
-        <a href="{{ route('dashboard') }}" class="text-blue-600 hover:text-blue-800">&larr; Volver al Dashboard</a>
-    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Columna Principal (Información) -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md space-y-6">
-            
-            <!-- Detalles del Ciudadano -->
-            <section>
-                <h2 class="text-2xl font-semibold border-b pb-2 mb-4 text-primario">Información del Ciudadano</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><strong>Nombre:</strong> {{ $solicitud->persona->NombreCompleto }}</div>
-                    <div><strong>Cédula:</strong> {{ $solicitud->persona->CedulaPersona }}</div>
-                    <div><strong>Teléfono:</strong> {{ $solicitud->persona->TelefonoPersona }} 
-                        <a href="tel:{{ $solicitud->persona->TelefonoPersona }}" class="text-blue-600 hover:underline">(Llamar)</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0">
+            Solicitud 
+            <span class="text-primary fw-bold">
+                #{{ $solicitud->Nro_UAC ?? $solicitud->CodSolucitud }}
+            </span>
+        </h2>
+        <span class="fs-5 text-muted">Nivel de Urgencia:
+            <span class="badge fs-6
+                @if($solicitud->NivelUrgencia == 'Alto') bg-danger
+                @elseif($solicitud->NivelUrgencia == 'Medio') bg-warning text-dark
+                @else bg-success
+                @endif">
+                {{ $solicitud->NivelUrgencia }}
+            </span>
+        </span>
+    </div>
+    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
+        &larr; Volver a la Agenda Digital
+    </a>
+</div>
+
+<div class="row g-4">
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">1. Información del Solicitante</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6"><strong>Nombre:</strong> {{ $solicitud->persona->NombreCompleto }}</div>
+                    <div class="col-md-6"><strong>Cédula:</strong> {{ $solicitud->persona->CedulaPersona }}</div>
+                    <div class="col-md-6">
+                        <strong>Teléfono:</strong> {{ $solicitud->persona->TelefonoPersona }}
+                        <a href="tel:{{ $solicitud->persona->TelefonoPersona }}" class="ms-2">(Llamar)</a>
                     </div>
-                    <div><strong>Correo:</strong> {{ $solicitud->persona->CorreoElectronicoPersona ?? 'N/A' }}</div>
-                    <div class="col-span-2"><strong>Localidad:</strong> 
-                        {{ $solicitud->persona->parroquia->NombreParroquia ?? 'N/A' }}, 
+                    <div class="col-md-6"><strong>Correo:</strong> {{ $solicitud->persona->CorreoElectronicoPersona ?? 'N/A' }}</div>
+                    <div class="col-12"><strong>Localidad:</strong>
+                        {{ $solicitud->persona->parroquia->NombreParroquia ?? 'N/A' }},
                         Mcp. {{ $solicitud->persona->parroquia->municipio->NombreMunicipio ?? 'N/A' }}
                     </div>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <!-- Detalles de la Solicitud -->
-            <section>
-                <h2 class="text-2xl font-semibold border-b pb-2 mb-4 text-primario">Detalles de la Solicitud</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><strong>Tipo (Planilla):</strong> {{ $solicitud->TipoSolicitudPlanilla }}</div>
-                    <div><strong>Tipo Solicitante:</strong> {{ $solicitud->TipoSolicitante }}</div>
-                    <div><strong>Fecha Solicitud:</strong> {{ $solicitud->FechaSolicitud->format('d/m/Y h:i A') }}</div>
-                    <div><strong>Código Interno:</strong> {{ $solicitud->CodigoInterno_FK }}</div>
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">2. Detalles de la Solicitud</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6"><strong>Tipo (Planilla):</strong> {{ $solicitud->TipoSolicitudPlanilla }}</div>
+                    <div class="col-md-6"><strong>Tipo Solicitante:</strong> {{ $solicitud->TipoSolicitante }}</div>
+                    <div class="col-md-6"><strong>Fecha Solicitud:</strong> {{ $solicitud->FechaSolicitud->format('d/m/Y h:i A') }}</div>
+                    <div class="col-md-6"><strong>Código Interno:</strong> {{ $solicitud->CodigoInterno_FK }}</div>
                 </div>
                 <div class="mt-4">
                     <strong>Descripción de la Solicitud:</strong>
-                    <p class="bg-gray-50 p-4 rounded-md mt-2 whitespace-pre-wrap">{{ $solicitud->DescripcionSolicitud }}</p>
+                    <p class="bg-light p-3 rounded-2 mt-2" style="white-space: pre-wrap;">{{ $solicitud->DescripcionSolicitud }}</p>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <!-- Archivos Adjuntos -->
-            <section>
-                <h2 class="text-2xl font-semibold border-b pb-2 mb-4 text-primario">Archivos Adjuntos</h2>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">3. Archivos Adjuntos</h5>
+            </div>
+            <div class="card-body p-4">
                 @if($solicitud->archivos->count() > 0)
-                    <ul class="list-disc list-inside space-y-2">
+                    <ul class="list-group">
                         @foreach($solicitud->archivos as $archivo)
-                        <li>
-                            <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" class="text-blue-600 hover:text-blue-800 hover:underline" title="Descargar">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" class="text-decoration-none" title="Descargar">
                                 {{ $archivo->nombre_original }}
                             </a>
-                            <span class="text-gray-500 text-sm">({{ number_format($archivo->tamano_archivo / 1024, 2) }} KB)</span>
+                            <span class="text-muted small">{{ number_format($archivo->tamano_archivo / 1024, 2) }} KB</span>
                         </li>
                         @endforeach
                     </ul>
                 @else
-                    <p class="text-gray-500">No hay archivos adjuntos para esta solicitud.</p>
+                    <p class="text-muted">No hay archivos adjuntos para esta solicitud.</p>
                 @endif
-            </section>
-
+            </div>
         </div>
+    </div>
 
-        <!-- Columna Lateral (Estado y Acciones) -->
-        <div class="lg:col-span-1 space-y-6">
-            
-            <!-- Estado Actual -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-2xl font-semibold mb-4 text-primario">Estado y Flujo</h2>
-                
-                <div class="text-center mb-4">
-                    <span class="text-3xl font-bold p-3 rounded-lg bg-blue-100 text-blue-800 border border-blue-300">
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 position-sticky" style="top: 1.5rem;">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Estado y Flujo</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-3">
+                    <span class="fs-4 fw-bold p-3 rounded-3 bg-primary bg-opacity-10 text-primary border border-primary">
                         {{ $solicitud->status->NombreStatusSolicitud ?? 'Sin Estado' }}
                     </span>
                 </div>
-                
-                <div class="space-y-2 text-gray-700">
-                    <div><strong>Nro. Oficio:</strong> {{ $solicitud->correspondencia->{'Nro.Oficio'} ?? 'N/A' }}</div>
-                    <div><strong>Recibido:</strong> {{ $solicitud->correspondencia->FechaRecibido->format('d/m/Y') }}</div>
-                    <div><strong>Registrado por:</strong> {{ $solicitud->funcionario->NombreUsuario ?? 'N/A' }}</div>
-                </div>
 
-                <div class="mt-4">
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item px-0"><strong>Nro. Oficio:</strong> {{ $solicitud->correspondencia->{'Nro.Oficio'} ?? 'N/A' }}</li>
+                    <li class="list-group-item px-0"><strong>Recibido:</strong> {{ $solicitud->correspondencia->FechaRecibido->format('d/m/Y') }}</li>
+                    <li class="list-group-item px-0"><strong>Registrado por:</strong> {{ $solicitud->funcionario->NombreUsuario ?? 'N/A' }}</li>
+                </ul>
+
+                <div>
                     <strong>Instrucciones:</strong>
-                    <p class="bg-gray-50 p-3 rounded-md mt-1 text-sm whitespace-pre-wrap h-40 overflow-y-auto">{{ $solicitud->correspondencia->InstruccionPresidencia ?? 'Sin instrucciones.' }}</p>
+                    <p class="bg-light p-3 rounded-2 mt-1 small" style="white-space: pre-wrap; height: 150px; overflow-y: auto;">{{ $solicitud->correspondencia->InstruccionPresidencia ?? 'Sin instrucciones.' }}</p>
                 </div>
             </div>
 
-            <!-- Cambiar Estado (Admin) -->
-            @if(auth()->user()->RolUsuario == 'Administrador')
-            <div id="cambiar-estado" class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-2xl font-semibold mb-4 text-primario">Acciones de Administrador</h2>
-                
+            <!--  @if(auth()->user()->RolUsuario == 'Administrador') -->
+            @can('es-admin')
+            <div class="card-footer p-4">
+                <li class="nav-item">
+        <a class="nav-link" href="{{ route('reportes.index') }}">Reportes</a>
+    </li>
+                <h5 class="mb-3">Acciones</h5>
                 <form action="{{ route('solicitudes.updateStatus', $solicitud->CodSolucitud) }}" method="POST">
                     @csrf
-                    <label for="status_id" class="block text-sm font-medium text-gray-700">Cambiar Estado</label>
-                    <select name="status_id" id="status_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        @foreach($statuses as $status)
-                        <option value="{{ $status->CodStatusSolicitud }}" @selected($solicitud->status->CodStatusSolicitud == $status->CodStatusSolicitud)>
-                            {{ $status->NombreStatusSolicitud }}
-                        </option>
-                        @endforeach
-                    </select>
+                    <div class="mb-3">
+                        <label for="status_id" class="form-label">Cambiar Estado:</label>
+                        <select name="status_id" id="status_id" required class="form-select">
+                            @foreach($statuses as $status)
+                            <option value="{{ $status->CodStatusSolicitud }}" @selected($solicitud->status->CodStatusSolicitud == $status->CodStatusSolicitud)>
+                                {{ $status->NombreStatusSolicitud }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    <label for="observacion" class="block text-sm font-medium text-gray-700 mt-4">Observación o Instrucción (se añadirá al historial)</label>
-                    <textarea name="observacion" id="observacion" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ej: Aprobado por presidencia, remitir a..."></textarea>
+                    @can('es-personal')
+    <div class="alert alert-info">
+        <p>Hola, {{ auth()->user()->NombreUsuario }}. Esta es tu vista de usuario personal.</p>
+    </div>
+@endcan
 
-                    <button type="submit" class="btn-primario w-full mt-4 justify-center py-3">
-                        Actualizar Estado
-                    </button>
+                    <div class="mb-3">
+                        <label for="observacion" class="form-label">Observación (se añadirá al historial):</label>
+                        <textarea name="observacion" id="observacion" rows="3" class="form-control" placeholder="Ej: Aprobado por presidencia, remitir a..."></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            Actualizar Estado
+                        </button>
+                    </div>
                 </form>
             </div>
             @endif
-
         </div>
-
     </div>
+</div>
 @endsection

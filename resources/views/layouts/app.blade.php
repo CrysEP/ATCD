@@ -1,57 +1,74 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
+    <meta charset="utf-m">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gestión de Solicitudes - Corpointa</title>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <title>@yield('title', 'SGS Corpointa')</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="icon" href="{{ asset('images/logo_corpointa.png') }}" type="image/x-icon">
+
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-gray-100">
-    <div class="min-h-screen">
-        <nav class="bg-white border-b border-gray-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex">
-                        <div class="shrink-0 flex items-center">
-                            <a href="{{ route('dashboard') }}">
-                                <h1 class="text-lg font-bold">CORPOINTA</h1>
-                            </a>
-                        </div>
+<body class="bg-light">
 
-                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <a href="{{ route('dashboard') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('dashboard') ? 'border-indigo-400' : 'border-transparent' }} text-sm font-medium leading-5 text-gray-900">
-                                Dashboard
-                            </a>
-                            <a href="{{ route('solicitudes.create') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('solicitudes.create') ? 'border-indigo-400' : 'border-transparent' }} text-sm font-medium leading-5 text-gray-900">
-                                Nueva Solicitud
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <div class="hidden sm:flex sm:items-center sm:ml-6">
-                         <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <a href="{{ route('logout') }}"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();"
-                                class="text-sm text-gray-700 underline">
-                                Salir ({{ Auth::user()->NombreUsuario ?? 'Usuario' }})
-                            </a>
-                        </form>
-                    </div>
+    <div id="app">
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
+                    <img src="{{ asset('images/logo_corpointa.png') }}" alt="Logo Corpointa" style="height: 40px; margin-right: 10px;">
+                    SGS Corpointa
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto">
+                        @auth
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}">Agenda Digital</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('solicitudes.create') }}">Nueva Solicitud</a>
+                            </li>
+                        @endauth
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto">
+                        @guest
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('login') }}">Iniciar Sesión</a>
+                            </li>
+                        @else
+                            <li class="nav-item dropdown">
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                    <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->NombreUsuario }}
+                                </a>
+
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('logout') }}"
+                                       onclick="event.preventDefault();
+                                                     document.getElementById('logout-form').submit();">
+                                        Cerrar Sesión
+                                    </a>
+
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                    </form>
+                                </div>
+                            </li>
+                        @endguest
+                    </ul>
                 </div>
             </div>
         </nav>
 
-        <main>
-            @yield('content')
+        <main class="py-4">
+            <div class="container">
+                @yield('content')
+            </div>
         </main>
     </div>
 
-    @stack('scripts')
 </body>
 </html>
