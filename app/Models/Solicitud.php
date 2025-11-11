@@ -50,11 +50,18 @@ class Solicitud extends Model
      * Relación: Una solicitud está vinculada a un registro de correspondencia.
      * Este es el vínculo clave para obtener el estado.
      */
-    public function correspondencia()
-    {
-        return $this->belongsTo(RelacionCorrespondencia::class, 'CodigoInterno_FK', 'CodigoInterno');
-    }
+    // public function correspondencia()
+    // {
+    //     return $this->belongsTo(RelacionCorrespondencia::class, 'CodigoInterno_FK', 'CodigoInterno');
+    // }
     
+public function correspondencia()
+    {
+        // El 'Solicitud_FK' de la tabla 'relacion_correspondencia'
+        // apunta al 'CodSolucitud' (PK) de esta tabla.
+        return $this->hasOne(RelacionCorrespondencia::class, 'Solicitud_FK', 'CodSolucitud');
+    }
+
     /**
      * Relación: Una solicitud tiene muchos archivos adjuntos.
      * (Usando la nueva tabla 'archivos_solicitud')

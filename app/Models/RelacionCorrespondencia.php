@@ -10,7 +10,7 @@ class RelacionCorrespondencia extends Model
     protected $primaryKey = 'CodigoInterno';
     public $incrementing = false;
     protected $keyType = 'string';
-    public $timestamps = false; // La tabla no tiene created_at/updated_at
+    public $timestamps = false;
 
     protected $fillable = [
         'CodigoInterno',
@@ -24,7 +24,8 @@ class RelacionCorrespondencia extends Model
         'InstruccionPresidencia',
         'Observacion',
         'Gerencia_Jefatura',
-        'StatusSolicitud_FK'
+        'StatusSolicitud_FK',
+        'Solicitud_FK' // <-- ¡AÑADIR ESTA LÍNEA!
     ];
 
     protected $casts = [
@@ -32,25 +33,21 @@ class RelacionCorrespondencia extends Model
         'FechaRecibido' => 'datetime',
     ];
 
-    /**
-     * Relación: La correspondencia tiene un estado (status).
-     */
     public function status()
     {
         return $this->belongsTo(StatusSolicitud::class, 'StatusSolicitud_FK', 'CodStatusSolicitud');
     }
 
     /**
-     * Relación: La correspondencia tiene una solicitud asociada.
+     * RELACIÓN INVERTIDA (NUEVA):
+     * Una correspondencia pertenece a una solicitud.
      */
     public function solicitud()
     {
-        return $this->hasOne(Solicitud::class, 'CodigoInterno_FK', 'CodigoInterno');
+        // El FK 'Solicitud_FK' de esta tabla apunta al 'CodSolucitud' de la Solicitud
+        return $this->belongsTo(Solicitud::class, 'Solicitud_FK', 'CodSolucitud');
     }
     
-    /**
-     * Relación: La correspondencia pertenece a un municipio.
-     */
     public function municipio()
     {
         return $this->belongsTo(Municipio::class, 'Municipio_FK', 'CodMunicipio');

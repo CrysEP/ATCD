@@ -12,6 +12,8 @@ use App\Models\Municipio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Usuario;
 
 
 
@@ -83,8 +85,12 @@ class SolicitudController extends Controller
         $municipios = Municipio::with('parroquias:CodParroquia,NombreParroquia,Municipio_FK')
                         ->get(['CodMunicipio', 'NombreMunicipio']);
 
-        // 2. Retornar la vista NUEVA pasando los datos
-        return view('solicitudes.create', compact('tiposEnte', 'municipios'));
+        
+       // 2. Cargar datos del funcionario logueado 
+        $funcionario = Usuario::with('persona', 'funcionarioData')->find(Auth::id());
+
+        // 3. Retornar la vista NUEVA pasando los datos
+        return view('solicitudes.create', compact('tiposEnte', 'municipios', 'funcionario'));
     }
 
     /**
@@ -99,7 +105,7 @@ class SolicitudController extends Controller
             'nombres' => 'required|string|max:100',
             'apellidos' => 'required|string|max:100',
             'telefono' => 'required|string|max:15',
-            'parroquia_id' => 'required|integer', // Asumiendo que tienes un select
+            'parroquia_id' => 'required|integer', 
             'email' => 'nullable|email',
             
             'nro_uac' => 'nullable|string|max:50|unique:solicitud,Nro.UAC',
@@ -119,7 +125,7 @@ class SolicitudController extends Controller
 
         try {
             // --- 2. Gestionar Persona (Buscar o Crear) ---
-            $persona = Persona::firstOrCreate(
+            $persona = Persona::updateOrCreate(
                 ['CedulaPersona' => $validatedData['cedula']],
                 [
                     'NombresPersona' => $validatedData['nombres'],
@@ -133,26 +139,7 @@ class SolicitudController extends Controller
                 ]
             );
 
-            // --- 3. Crear Relación de Correspondencia (Vínculo al Status) ---
-            // El estado inicial siempre es 'Pendiente' (ID 1, según tu seeder)
-            $codigoInterno = 'CI-' . date('Ymd-His') . '-' . Str::random(4); // Generar un código único
-
-            $correspondencia = RelacionCorrespondencia::create([
-                'CodigoInterno' => $codigoInterno,
-                'Nro.Oficio' => $request->nro_oficio ?? 'N/A',
-                'FechaOficioEntrega' => now(),
-                'FechaRecibido' => now(),
-                'Municipio_FK' => $persona->parroquia->Municipio_FK,
-                'Ente' => 0, // Ajustar según lógica
-                'Sector' => $request->sector ?? 'N/A',
-                'Descripcion' => $validatedData['descripcion'], // Replicar descripción
-                'InstruccionPresidencia' => $validatedData['instruccion_presidencia'] ?? '',
-                'Observacion' => '',
-                'Gerencia_Jefatura' => '',
-                'StatusSolicitud_FK' => 1, // 1 = Pendiente (del seeder o.o)
-            ]);
-
-            // --- 4. Crear la Solicitud ---
+            // --- 3. Crear la Solicitud ---
             $solicitud = Solicitud::create([
                 'TipoSolicitudPlanilla' => $validatedData['tipo_solicitud_planilla'],
                 'DescripcionSolicitud' => $validatedData['descripcion'],
@@ -167,9 +154,29 @@ class SolicitudController extends Controller
                 'CantidadPaginasAnexo' => 0, // Ajustar si es necesario
                 'CedulaPersona_FK' => $persona->CedulaPersona,
                 'Nro.UAC' => $validatedData['nro_uac'],
-                'CodigoInterno_FK' => $correspondencia->CodigoInterno,
+                // 'CodigoInterno_FK' => $correspondencia->CodigoInterno,
                 'Funcionario_FK' => auth()->user()->CodUsuario, // Asumiendo que el funcionario es el usuario logueado
                 'TipoSolicitud_FK' => $request->tipo_solicitud_fk ?? 'TIPO-01', // Ajustar
+            ]);
+
+            // --- 4. Crear Relación de Correspondencia (Vínculo al Status) ---
+            // El estado inicial siempre es 'Pendiente' (ID 1, según tu seeder)
+            $codigoInterno = 'CI-' . date('Ymd-His') . '-' . Str::random(4); // Generar un código único
+
+            $correspondencia = RelacionCorrespondencia::create([
+                'CodigoInterno' => $codigoInterno,
+                'Solicitud_FK' => $solicitud->CodSolucitud,
+                'Nro.Oficio' => $request->nro_oficio ?? 'N/A',
+                'FechaOficioEntrega' => now(),
+                'FechaRecibido' => now(),
+                'Municipio_FK' => $persona->parroquia->Municipio_FK,
+                'Ente' => 0, // Ajustar según lógica
+                'Sector' => $request->sector ?? 'N/A',
+                'Descripcion' => $validatedData['descripcion'], // Replicar descripción
+                'InstruccionPresidencia' => $validatedData['instruccion_presidencia'] ?? '',
+                'Observacion' => '',
+                'Gerencia_Jefatura' => '',
+                'StatusSolicitud_FK' => 1, // 1 = Pendiente (del seeder o.o)
             ]);
 
             // --- 5. Manejar Archivos Adjuntos ---

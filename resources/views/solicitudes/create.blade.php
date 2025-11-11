@@ -22,6 +22,7 @@
                 </div>
             @endif
 
+
             <div class="card card-gradient-body shadow-sm mb-4 border-0">
                 <div class="card-header bg-dark text-white">
                     <h5 class="mb-0">1. Datos del Solicitante</h5>
@@ -132,8 +133,71 @@
             </div>
 
             <div class="card card-gradient-body shadow-sm mb-4 border-0">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">3. Datos del Funcionario</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                 @if ($funcionario->funcionarioData)
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nombre:</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ $funcionario->persona->NombreCompleto ?? $funcionario->NombreUsuario }}" 
+                                           disabled readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cédula:</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ $funcionario->persona->CedulaPersona ?? 'N/A' }}" 
+                                           disabled readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cargo:</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ $funcionario->funcionarioData->CargoFuncionario }}" 
+                                           disabled readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Adscripción (Unidad):</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ $funcionario->funcionarioData->AdscripciónFuncionario }}" 
+                                           disabled readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Firma Digital Registrada:</label>
+                            @if ($funcionario->funcionarioData->FirmaDigitalBase64)
+                                <div class="border rounded p-2 text-center" style="background-color: #fff;">
+                                    <img src="{{ $funcionario->funcionarioData->FirmaDigitalBase64 }}" 
+                                         alt="Firma Digital" 
+                                         style="max-height: 100px; max-width: 100%;">
+                                </div>
+                            @else
+                                <div class="border rounded p-2 text-center text-muted" style="background-color: #fff; height: 100%;">
+                                    <small>(Sin firma registrada)</small>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <p class="text-danger">
+                        No se encontró un registro de 'Funcionario' asociado a su Cédula ({{ $funcionario->persona->CedulaPersona ?? 'N/A' }}). 
+                        Contacte al administrador.
+                    </p>
+                @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <div class="card card-gradient-body shadow-sm mb-4 border-0">
                 <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">3. Archivos Adjuntos (Opcional)</h5>
+                    <h5 class="mb-0">4. Archivos Adjuntos (Opcional)</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-3">
@@ -143,17 +207,21 @@
                 </div>
             </div>
 
-            <div class="d-grid gap-2 col-6 mx-auto mb-4">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    Registrar Solicitud
-                </button>
+            
+            <div class=" d-flex justify-content-center gap-2 mb-4">
+                    <div class="d-grid gap-2 col-6 mx-auto mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Registrar Solicitud
+                        </button>
+                    </div>
+
+                    <div class="d-grid gap-2 col-6 mx-auto mb-4">
+                        <button onclick="history.back()" class="btn btn-primary btn-lg">
+                            Volver
+                        </button>
+                    </div>
             </div>
 
-               <div class="d-grid gap-2 col-6 mx-auto mb-4">
-                <button onclick="history.back()" class="btn btn-primary btn-lg">
-                    Regresar
-                </button>
-            </div>
         </form>
 
     </div>

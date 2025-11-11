@@ -32,6 +32,7 @@ class Usuario extends Authenticatable
     public function getAuthPassword()
     {
         return $this->ContraseniaUsuario;
+        return $this->belongsTo(Persona::class, 'CedulaPersonaUsuario_FK', 'CedulaPersona');
     }
 
     /**
@@ -40,5 +41,12 @@ class Usuario extends Authenticatable
     public function persona()
     {
         return $this->belongsTo(Persona::class, 'CedulaPersonaUsuario_FK', 'CedulaPersona');
+    }
+
+    public function funcionarioData()
+    {
+        // 'CedulaPersona_FK' -> Columna en la tabla 'funcionario'
+        // 'CedulaPersonaUsuario_FK' -> Columna en la tabla 'usuario' (este modelo)
+        return $this->hasOne(Funcionario::class, 'CedulaPersona_FK', 'CedulaPersonaUsuario_FK');
     }
 }
