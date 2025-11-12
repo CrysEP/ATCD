@@ -105,7 +105,7 @@
                 </div>
 
                 <ul class="list-group list-group-flush mb-3">
-                    <li class="list-group-item px-0"><strong>Nro. Oficio:</strong> {{ $solicitud->correspondencia->{'Nro.Oficio'} ?? 'N/A' }}</li>
+                    <li class="list-group-item px-0"><strong>Nro. Oficio:</strong> {{ $solicitud->correspondencia->{'Nro_Oficio'} ?? 'N/A' }}</li>
                     <li class="list-group-item px-0"><strong>Recibido:</strong> {{ $solicitud->correspondencia->FechaRecibido->format('d/m/Y') }}</li>
                     <li class="list-group-item px-0"><strong>Registrado por:</strong> {{ $solicitud->funcionario->NombreUsuario ?? 'N/A' }}</li>
                 </ul>

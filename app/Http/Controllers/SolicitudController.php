@@ -50,7 +50,7 @@ class SolicitudController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('Nro.UAC', 'like', "%{$search}%")
+                $q->where('Nro_UAC', 'like', "%{$search}%")
                   ->orWhere('DescripcionSolicitud', 'like', "%{$search}%")
                   ->orWhereHas('persona', function ($q_persona) use ($search) {
                       $q_persona->where('NombresPersona', 'like', "%{$search}%")
@@ -108,7 +108,7 @@ class SolicitudController extends Controller
             'parroquia_id' => 'required|integer', 
             'email' => 'nullable|email',
             
-            'nro_uac' => 'nullable|string|max:50|unique:solicitud,Nro.UAC',
+            'nro_uac' => 'nullable|string|max:50|unique:solicitud,Nro_UAC',
             'tipo_solicitud_planilla' => 'required|string', // Enum
             'descripcion' => 'required|string',
             'tipo_solicitante' => 'required|string', // Enum
@@ -153,12 +153,13 @@ class SolicitudController extends Controller
                 'CantidadDocumentoCopia' => 0, // Ajustar si es necesario
                 'CantidadPaginasAnexo' => 0, // Ajustar si es necesario
                 'CedulaPersona_FK' => $persona->CedulaPersona,
-                'Nro.UAC' => $validatedData['nro_uac'],
+                'Nro_UAC' => $validatedData['nro_uac'],
                 // 'CodigoInterno_FK' => $correspondencia->CodigoInterno,
-                'Funcionario_FK' => auth()->user()->CodUsuario, // Asumiendo que el funcionario es el usuario logueado
-                'TipoSolicitud_FK' => $request->tipo_solicitud_fk ?? 'TIPO-01', // Ajustar
+                'Funcionario_FK' => auth()->user()->funcionarioData->CodFuncionario,
+                'TipoSolicitud_FK' => $request->tipo_solicitud_fk ?? null, // Ajustar
             ]);
 
+            
             // --- 4. Crear Relación de Correspondencia (Vínculo al Status) ---
             // El estado inicial siempre es 'Pendiente' (ID 1, según tu seeder)
             $codigoInterno = 'CI-' . date('Ymd-His') . '-' . Str::random(4); // Generar un código único
@@ -166,7 +167,7 @@ class SolicitudController extends Controller
             $correspondencia = RelacionCorrespondencia::create([
                 'CodigoInterno' => $codigoInterno,
                 'Solicitud_FK' => $solicitud->CodSolucitud,
-                'Nro.Oficio' => $request->nro_oficio ?? 'N/A',
+                'Nro_Oficio' => $request->nro_oficio ?? 'N/A',
                 'FechaOficioEntrega' => now(),
                 'FechaRecibido' => now(),
                 'Municipio_FK' => $persona->parroquia->Municipio_FK,

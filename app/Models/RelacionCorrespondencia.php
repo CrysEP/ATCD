@@ -14,7 +14,7 @@ class RelacionCorrespondencia extends Model
 
     protected $fillable = [
         'CodigoInterno',
-        'Nro.Oficio',
+        'Nro_Oficio',
         'FechaOficioEntrega',
         'FechaRecibido',
         'Municipio_FK',

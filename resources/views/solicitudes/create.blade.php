@@ -22,6 +22,15 @@
                 </div>
             @endif
 
+            @if (session('error'))
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">¡Error al Guardar!</h4>
+        <p>Ocurrió un error inesperado al intentar guardar en la base de datos:</p>
+        <hr>
+        <p class="mb-0">{{ session('error') }}</p>
+    </div>
+@endif
+
 
             <div class="card card-gradient-body shadow-sm mb-4 border-0">
                 <div class="card-header bg-dark text-white">

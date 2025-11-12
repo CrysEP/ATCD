@@ -17,7 +17,7 @@ class Solicitud extends Model
         'TipoSolicitudPlanilla', 'DescripcionSolicitud', 'FechaSolicitud',
         'TipoSolicitante', 'NivelUrgencia', 'FechaAtención', 'AnexaDocumentos',
         'CantidadDocumentosOriginal', 'CantidadDocumentoCopia', 'CantidadPaginasAnexo',
-        'CedulaPersona_FK', 'Nro.UAC', 'CodigoInterno_FK', 'Funcionario_FK', 'TipoSolicitud_FK'
+        'CedulaPersona_FK', 'Nro_UAC', 'CodigoInterno_FK', 'Funcionario_FK', 'TipoSolicitud_FK', 'SelloDigital'
     ];
 
     protected $casts = [
