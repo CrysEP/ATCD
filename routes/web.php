@@ -16,9 +16,8 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// --- RUTAS PROTEGIDAS ---
-Route::middleware(['auth', 'can:es-admin'])->group(function () {
-
+// --- RUTAS PROTEGIDAS (PARA TODOS LOS USUARIOS LOGUEADOS) ---
+Route::middleware(['auth'])->group(function () {
     // Agenda Digital (Dashboard)
     Route::get('/', [SolicitudController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [SolicitudController::class, 'index']);
@@ -27,13 +26,28 @@ Route::middleware(['auth', 'can:es-admin'])->group(function () {
     Route::get('/solicitudes/crear', [SolicitudController::class, 'create'])->name('solicitudes.create');
     Route::post('/solicitudes', [SolicitudController::class, 'store'])->name('solicitudes.store');
 
-    // Rutas futuras (comentadas para evitar errores por ahora)
-    // Route::get('/solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
+  // Ruta para ver el historial (DEBE IR PRIMERO)
+    Route::get('/solicitudes/historial', [SolicitudController::class, 'history'])->name('solicitudes.history');
+    
+    // Ver Detalles (DEBE IR DESPUÉS DE LAS RUTAS ESTÁTICAS)
+    Route::get('/solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
+
+    // Descargar Archivos
+    Route::get('/solicitudes/archivo/{id}/descargar', [SolicitudController::class, 'downloadFile'])->name('solicitudes.downloadFile');
+
 });
 
 
+// --- RUTAS SOLO PARA ADMINS ---
+Route::middleware(['auth', 'can:es-admin'])->group(function () {
+    
+    // Ruta para que el formulario de 'show' actualice el estado
+    Route::post('/solicitudes/{id}/actualizar-estado', [SolicitudController::class, 'updateStatus'])->name('solicitudes.updateStatus');
 
+    // Ruta para editar los datos del flujo (Nro Oficio, etc.)
+    Route::post('/solicitudes/{id}/actualizar-flujo', [SolicitudController::class, 'updateFlujo'])->name('solicitudes.updateFlujo');
 
-// Auth::routes();
+    
+    // (Aquí irán futuras rutas de reportes)
 
-// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+});

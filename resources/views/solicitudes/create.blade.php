@@ -217,20 +217,18 @@
             </div>
 
             
-            <div class=" d-flex justify-content-center gap-2 mb-4">
-                    <div class="d-grid gap-2 col-6 mx-auto mb-4">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            Registrar Solicitud
-                        </button>
-                    </div>
+       <div class="d-flex justify-content-center gap-3 mb-4">
+    
+                <button onclick="history.back()" type="button" class="btn btn-secondary btn-lg">
+                    Volver
+                </button>
 
-                    <div class="d-grid gap-2 col-6 mx-auto mb-4">
-                        <button onclick="history.back()" class="btn btn-primary btn-lg">
-                            Volver
-                        </button>
-                    </div>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Registrar Solicitud
+                </button>
+
             </div>
-
+            
         </form>
 
     </div>

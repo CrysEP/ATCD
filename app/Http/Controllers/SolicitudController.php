@@ -166,7 +166,7 @@ class SolicitudController extends Controller
 
             $correspondencia = RelacionCorrespondencia::create([
                 'CodigoInterno' => $codigoInterno,
-                'Solicitud_FK' => $solicitud->CodSolucitud,
+                'Solicitud_FK' => $solicitud->CodSolicitud,
                 'Nro_Oficio' => $request->nro_oficio ?? 'N/A',
                 'FechaOficioEntrega' => now(),
                 'FechaRecibido' => now(),
@@ -217,7 +217,8 @@ class SolicitudController extends Controller
         $solicitud = Solicitud::with([
             'persona.parroquia.municipio', 
             'correspondencia.status',
-            'archivos'
+            'archivos',
+            'funcionario.persona'
         ])->findOrFail($id);
 
         $statuses = StatusSolicitud::all(); // Para el modal de cambio de estado
@@ -273,4 +274,32 @@ class SolicitudController extends Controller
          // Devuelve la descarga desde el storage 'public'
          return Storage::disk('public')->download($archivo->ruta_archivo, $archivo->nombre_original);
      }
+
+/**
+     * Actualiza los datos del flujo de correspondencia (Nro Oficio, Instrucciones).
+     */
+    public function updateFlujo(Request $request, $id)
+    {
+        // 1. Validar los datos del modal
+        $validatedData = $request->validate([
+            'Nro_Oficio' => 'required|string|max:100',
+            'InstruccionPresidencia' => 'nullable|string',
+            'Observacion' => 'nullable|string',
+        ]);
+
+        try {
+            // 2. Buscar la solicitud y su correspondencia
+            $solicitud = Solicitud::findOrFail($id);
+            
+            // 3. Actualizar la correspondencia con los datos validados
+            $solicitud->correspondencia->update($validatedData);
+
+            // 4. Redirigir atrás con éxito
+            return back()->with('success', 'Datos del flujo actualizados correctamente.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al actualizar el flujo: ' . $e->getMessage());
+        }
+    }
+
 }

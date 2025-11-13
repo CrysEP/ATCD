@@ -16,7 +16,7 @@
 
         <div class="list-group">
             @forelse ($solicitudes as $solicitud)
-                <a href="#" class="list-group-item list-group-item-action mb-3 p-3 shadow-sm border-0">
+                <a href="{{ route('solicitudes.show', $solicitud->CodSolicitud) }}" class="list-group-item list-group-item-action mb-3 p-3 shadow-sm border-0">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1 text-primary">
                             @if ($solicitud->Nro_UAC)

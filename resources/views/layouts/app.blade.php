@@ -31,6 +31,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('solicitudes.create') }}">Nueva Solicitud</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('solicitudes.history') }}">Historial</a>
+                            </li>
                         @endauth
                     </ul>
 

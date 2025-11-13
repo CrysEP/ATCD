@@ -14,7 +14,7 @@
                 <table class="table table-striped table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th scope="col">Nro. UAC</th>
+                            <th scope="col">Nro. Solicitud</th>
                             <th scope="col">Ciudadano</th>
                             <th scope="col">Descripción</th>
                             <th scope="col">Fecha Solicitud</th>
@@ -25,7 +25,7 @@
                     <tbody>
                         @forelse ($solicitudes as $solicitud)
                         <tr>
-                            <td class="fw-bold text-primary">{{ $solicitud->Nro_UAC ?? $solicitud->CodSolucitud }}</td>
+                            <td class="fw-bold text-primary">{{ $solicitud->Nro_UAC ?? $solicitud->CodSolicitud }}</td>
                             <td>{{ $solicitud->persona->NombreCompleto }}</td>
                             <td>{{ \Illuminate\Support\Str::limit($solicitud->DescripcionSolicitud, 70) }}</td>
                             <td>{{ $solicitud->FechaSolicitud->format('d/m/Y') }}</td>
@@ -35,7 +35,7 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('solicitudes.show', $solicitud->CodSolucitud) }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ route('solicitudes.show', $solicitud->CodSolicitud) }}" class="btn btn-sm btn-outline-primary">
                                     Ver
                                 </a>
                             </td>

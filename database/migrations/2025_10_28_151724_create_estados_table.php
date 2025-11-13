@@ -19,9 +19,9 @@ return new class extends Migration
             $table->id();
             
             // Usamos constrained para asegurar la integridad referencial
-            // Asumiendo que la PK de 'solicitud' es 'CodSolucitud'
+            // Asumiendo que la PK de 'solicitud' es 'CodSolicitud'
             $table->foreignId('solicitud_id')
-                  ->constrained('solicitud', 'CodSolucitud')
+                  ->constrained('solicitud', 'CodSolicitud')
                   ->onDelete('cascade');
                   
             $table->string('nombre_original');

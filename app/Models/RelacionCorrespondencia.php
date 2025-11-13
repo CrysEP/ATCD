@@ -25,7 +25,7 @@ class RelacionCorrespondencia extends Model
         'Observacion',
         'Gerencia_Jefatura',
         'StatusSolicitud_FK',
-        'Solicitud_FK' // <-- ¡AÑADIR ESTA LÍNEA!
+        'Solicitud_FK'
     ];
 
     protected $casts = [
@@ -44,8 +44,8 @@ class RelacionCorrespondencia extends Model
      */
     public function solicitud()
     {
-        // El FK 'Solicitud_FK' de esta tabla apunta al 'CodSolucitud' de la Solicitud
-        return $this->belongsTo(Solicitud::class, 'Solicitud_FK', 'CodSolucitud');
+        // El FK 'Solicitud_FK' de esta tabla apunta al 'CodSolicitud' de la Solicitud
+        return $this->belongsTo(Solicitud::class, 'Solicitud_FK', 'CodSolicitud');
     }
     
     public function municipio()

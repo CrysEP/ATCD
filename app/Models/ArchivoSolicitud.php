@@ -21,6 +21,6 @@ class ArchivoSolicitud extends Model
      */
     public function solicitud()
     {
-        return $this->belongsTo(Solicitud::class, 'solicitud_id', 'CodSolucitud');
+        return $this->belongsTo(Solicitud::class, 'solicitud_id', 'CodSolicitud');
     }
 }

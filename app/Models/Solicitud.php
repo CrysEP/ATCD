@@ -10,7 +10,7 @@ class Solicitud extends Model
     use HasFactory;
 
     protected $table = 'solicitud';
-    protected $primaryKey = 'CodSolucitud';
+    protected $primaryKey = 'CodSolicitud';
     public $timestamps = false; // La tabla no tiene created_at/updated_at
 
     protected $fillable = [
@@ -42,8 +42,7 @@ class Solicitud extends Model
     {
         // return $this->belongsTo(Funcionario::class, 'Funcionario_FK', 'CodFuncionario');
         // De momento lo comentamos hasta que se cree el modelo Funcionario
-        return $this
-            ->belongsTo(Usuario::class, 'Funcionario_FK', 'CodFuncionario'); // Temporal
+        return $this->belongsTo(Funcionario::class, 'Funcionario_FK', 'CodFuncionario'); // Temporal
     }
     
     /**
@@ -58,8 +57,8 @@ class Solicitud extends Model
 public function correspondencia()
     {
         // El 'Solicitud_FK' de la tabla 'relacion_correspondencia'
-        // apunta al 'CodSolucitud' (PK) de esta tabla.
-        return $this->hasOne(RelacionCorrespondencia::class, 'Solicitud_FK', 'CodSolucitud');
+        // apunta al 'CodSolicitud' (PK) de esta tabla.
+        return $this->hasOne(RelacionCorrespondencia::class, 'Solicitud_FK', 'CodSolicitud');
     }
 
     /**
@@ -68,7 +67,7 @@ public function correspondencia()
      */
     public function archivos()
     {
-        return $this->hasMany(ArchivoSolicitud::class, 'solicitud_id', 'CodSolucitud');
+        return $this->hasMany(ArchivoSolicitud::class, 'solicitud_id', 'CodSolicitud');
     }
 
     /**
