@@ -38,31 +38,50 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <label for="cedula" class="form-label">Cédula *</label>
-                            <input type="text" class="form-control" id="cedula" name="cedula" value="{{ old('cedula') }}" required>
-                        </div>
+                       <div class="form-group col-md-5">
+
+
+    <label for="tipo_cedula">Cédula de identidad *</label>
+    <div class="input-group">
+        {{-- Dropdown para el tipo de cédula --}}
+        <select class="form-select" id="tipo_cedula" name="tipo_cedula" style="padding: 4px 4px 4px 4px; width:5px;" required>
+            <option value="V-" selected>V - Venezolano</option>
+            <option value="E-">E - Extranjero</option>
+            <option value="J-">J - Jurídico</option>
+            <option value="P-">P - Pasaporte</option>
+            <option value="G-">G - Gobierno</option>
+        </select>
+        {{-- Campo de texto para el número de cédula --}}
+        <input type="text" class="form-control" id="cedula" name="cedula" placeholder="Número de Cédula" required title="Ingrese su identificación según la letra que corresponda" >
+    </div>
+    @error('tipo_cedula')
+        <div class="text-danger">{{ $message }}</div>
+    @enderror
+    @error('cedula')
+        <div class="text-danger">{{ $message }}</div>
+    @enderror
+</div>
                         <div class="col-md-4">
                             <label for="nombres" class="form-label">Nombres *</label>
-                            <input type="text" class="form-control" id="nombres" name="nombres" value="{{ old('nombres') }}" required>
+                            <input type="text" class="form-control" id="nombres" name="nombres" value="{{ old('nombres') }}" required title="Ingrese primer, segundo y/o tercer nombre">
                         </div>
                         <div class="col-md-4">
                             <label for="apellidos" class="form-label">Apellidos *</label>
-                            <input type="text" class="form-control" id="apellidos" name="apellidos" value="{{ old('apellidos') }}" required>
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" value="{{ old('apellidos') }}" required title="Ingrese apellidos">
                         </div>
 
                         <div class="col-md-4">
                             <label for="telefono" class="form-label">Teléfono *</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono" value="{{ old('telefono') }}" required>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" value="{{ old('telefono') }}" required title="Introduce un número válido de 11 dígitos. Ej: 04141234567 o 02121234567">
                         </div>
                         <div class="col-md-8">
-                            <label for="email" class="form-label">Correo Electrónico (Opcional)</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}">
+                            <label for="email" class="form-label">Correo Electrónico *</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required title="Ejemplo correo@gmail.com, correo@outlook.com">
                         </div>
 
                         <div class="col-md-6">
                             <label for="municipio_id" class="form-label">Municipio:</label>
-                            <select class="form-select" id="municipio_id" name="municipio_id" required>
+                            <select class="form-select" id="municipio_id" name="municipio_id" required title="Seleccione un Municipio">
                                 <option value="" disabled selected>-- Seleccione un Municipio --</option>
                                 @foreach ($municipios as $municipio)
                                     <option value="{{ $municipio->CodMunicipio }}">{{ $municipio->NombreMunicipio }}</option>
@@ -71,7 +90,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="parroquia_id" class="form-label">Parroquia:</label>
-                            <select class="form-select" id="parroquia_id" name="parroquia_id" required>
+                            <select class="form-select" id="parroquia_id" name="parroquia_id" required Title="Seleccione un Municipio primero y luego su Parroquia">
                                 <option value="">-- Seleccione un Municipio primero --</option>
                             </select>
                         </div>
@@ -86,8 +105,8 @@
                 <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <label for="fecha_atencion" class="form-label">Fecha de Recepción:</label>
-                            <input type="date" class="form-control" id="fecha_atencion" name="fecha_atencion" value="{{ old('fecha_atencion', now()->format('Y-m-d')) }}" required>
+                            <label for="fecha_atencion" class="form-label">Fecha de Solicitud:</label>
+                            <input type="datetime-local" class="form-control" id="fecha_atencion" name="fecha_atencion" value="{{ old('fecha_atencion', now()->format('Y-m-d')) }}" required title="Seleccione la fecha y hora en la que se creo la solicitud">
                         </div>
                         <div class="col-md-3">
                             <label for="nro_uac" class="form-label">Nro. UAC (Opcional):</label>

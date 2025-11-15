@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
+use Illuminate\Validation\Rule;
 
 
 
@@ -101,7 +102,8 @@ class SolicitudController extends Controller
     {
         // --- 1. Validación (Añadir reglas según sea necesario) ---
         $validatedData = $request->validate([
-            'cedula' => 'required|string|max:30',
+            'tipo_cedula' => ['required', 'string', 'max:2', Rule::in(['V-', 'E-', 'J-', 'P-', 'G-'])],
+            'cedula' => 'required|string|max:20',
             'nombres' => 'required|string|max:100',
             'apellidos' => 'required|string|max:100',
             'telefono' => 'required|string|max:15',
@@ -117,16 +119,19 @@ class SolicitudController extends Controller
             'instruccion_presidencia' => 'nullable|string',
 
             'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240', // max 10MB, por ahora o.o
-            'fecha_atencion' => 'required|date',   
+            'fecha_atencion' => 'required|date', 
+    
         ]);
 
         // Iniciar transacción de base de datos
         DB::beginTransaction();
 
         try {
+
+            $cedulaCompleta = $validatedData['tipo_cedula'] . $validatedData['cedula'];
             // --- 2. Gestionar Persona (Buscar o Crear) ---
             $persona = Persona::updateOrCreate(
-                ['CedulaPersona' => $validatedData['cedula']],
+                ['CedulaPersona' => $cedulaCompleta],
                 [
                     'NombresPersona' => $validatedData['nombres'],
                     'ApellidosPersona' => $validatedData['apellidos'],
@@ -301,5 +306,7 @@ class SolicitudController extends Controller
             return back()->with('error', 'Error al actualizar el flujo: ' . $e->getMessage());
         }
     }
+
+    
 
 }

@@ -16,3 +16,17 @@
 .text-dark {
     color: $text-dark !important;
 }
+
+.bg-info {
+    background-color: $bg-info !important;
+}
+
+.bg-danger-emphasis {
+    background-color: $bg-danger-emphasis !important;
+    color: #fafdff;
+}
+
+.bg-secondary-bg-subtle {
+    background-color: #cfd8eb !important;
+    color: #41464b !important;
+}

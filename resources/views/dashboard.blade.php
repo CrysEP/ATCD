@@ -18,7 +18,7 @@
             @forelse ($solicitudes as $solicitud)
                 <a href="{{ route('solicitudes.show', $solicitud->CodSolicitud) }}" class="list-group-item list-group-item-action mb-3 p-3 shadow-sm border-0">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1 text-primary">
+                        <h5 class="mb-1 text-dark">
                             @if ($solicitud->Nro_UAC)
                                 <span class="fw-bold">Nro. UAC:</span> {{ $solicitud->Nro_UAC }}
                             @else
@@ -36,6 +36,7 @@
                         <span class="badge 
                             @if($solicitud->correspondencia->status->CodStatusSolicitud == 1) bg-warning text-dark
                             @elseif($solicitud->correspondencia->status->CodStatusSolicitud == 2) bg-info text-dark
+                            @elseif($solicitud->correspondencia->status->CodStatusSolicitud == 4) bg-danger-emphasis
                             @else bg-secondary
                             @endif">
                             <i class="bi bi-tag me-1"></i>
@@ -45,7 +46,7 @@
                         <span class="badge 
                             @if($solicitud->NivelUrgencia == 'Alto') bg-danger
                             @elseif($solicitud->NivelUrgencia == 'Medio') bg-warning text-dark
-                            @else bg-success
+                            @else bg-secondary-bg-subtle
                             @endif">
                             <i class="bi bi-exclamation-triangle me-1"></i>
                             Urgencia: {{ $solicitud->NivelUrgencia }}
