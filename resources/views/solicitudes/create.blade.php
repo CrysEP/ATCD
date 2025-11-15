@@ -104,10 +104,17 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-3">
-                            <label for="fecha_atencion" class="form-label">Fecha de Solicitud:</label>
-                            <input type="datetime-local" class="form-control" id="fecha_atencion" name="fecha_atencion" value="{{ old('fecha_atencion', now()->format('Y-m-d')) }}" required title="Seleccione la fecha y hora en la que se creo la solicitud">
-                        </div>
+                       {{-- CAMPO 1: FECHA DE SOLICITUD (LA NUEVA) --}}
+    <div class="col-md-3">
+        <label for="fecha_solicitud" class="form-label">Fecha de Solicitud (Planilla):</label>
+        <input type="datetime-local" class="form-control" id="fecha_solicitud" name="fecha_solicitud" value="{{ old('fecha_solicitud', now()->format('Y-m-d\TH:i')) }}" required title="Fecha en la que se llenó de la planilla">
+    </div>
+
+    {{-- CAMPO 2: FECHA DE ATENCIÓN (LA EXISTENTE) --}}
+    <div class="col-md-3">
+        <label for="fecha_atencion" class="form-label">Fecha de Atención (Recepción):</label>
+        <input type="datetime-local" class="form-control" id="fecha_atencion" name="fecha_atencion" value="{{ old('fecha_atencion', now()->format('Y-m-d\TH:i')) }}" required>
+    </div>
                         <div class="col-md-3">
                             <label for="nro_uac" class="form-label">Nro. UAC (Opcional):</label>
                             <input type="text" class="form-control" id="nro_uac" name="nro_uac" value="{{ old('nro_uac') }}">

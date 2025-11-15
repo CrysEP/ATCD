@@ -119,7 +119,8 @@ class SolicitudController extends Controller
             'instruccion_presidencia' => 'nullable|string',
 
             'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240', // max 10MB, por ahora o.o
-            'fecha_atencion' => 'required|date', 
+            'fecha_atencion' => 'required|date',  //Esta quedó como la fecha de creación de la planilla en físico
+            'fecha_solicitud' => 'required|date' //Esta quedó como la fecha de atención del formato en físico, creo
     
         ]);
 
@@ -148,7 +149,7 @@ class SolicitudController extends Controller
             $solicitud = Solicitud::create([
                 'TipoSolicitudPlanilla' => $validatedData['tipo_solicitud_planilla'],
                 'DescripcionSolicitud' => $validatedData['descripcion'],
-                'FechaSolicitud' => now(),
+                'FechaSolicitud' => $validatedData['fecha_solicitud'],
                 'FechaAtención' => $validatedData['fecha_atencion'],
                 'TipoSolicitante' => $validatedData['tipo_solicitante'],
                 'NivelUrgencia' => $validatedData['nivel_urgencia'],
