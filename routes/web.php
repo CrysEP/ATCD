@@ -35,6 +35,9 @@ Route::middleware(['auth'])->group(function () {
     // Descargar Archivos
     Route::get('/solicitudes/archivo/{id}/descargar', [SolicitudController::class, 'downloadFile'])->name('solicitudes.downloadFile');
 
+    Route::get('/solicitudes/{id}/editar', [SolicitudController::class, 'edit'])->name('solicitudes.edit');
+    Route::put('/solicitudes/{id}', [SolicitudController::class, 'update'])->name('solicitudes.update');
+
 });
 
 

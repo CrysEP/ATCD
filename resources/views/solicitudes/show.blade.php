@@ -22,9 +22,20 @@
             </span>
         </span>
     </div>
-    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
+    <!-- <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
         &larr; Volver a la Agenda Digital
-    </a>
+    </a> -->
+
+    <div class="d-flex gap-2">
+        {{-- BOTÓN EDITAR (NUEVO) --}}
+        <a href="{{ route('solicitudes.edit', $solicitud->CodSolicitud) }}" class="btn btn-warning text-dark">
+            <i class="bi bi-pencil-square"></i> Editar Datos
+        </a>
+
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
+            &larr; Volver a la Agenda
+        </a>
+    </div>
 </div>
 
 <div class="row g-4">

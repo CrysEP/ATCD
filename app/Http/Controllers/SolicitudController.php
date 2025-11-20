@@ -308,6 +308,102 @@ class SolicitudController extends Controller
         }
     }
 
+
+
+    
+
+    public function edit($id)
+{
+    $solicitud = Solicitud::with(['persona', 'correspondencia'])->findOrFail($id);
+    
+    // Listas para los selects
+    $tiposEnte = TipoEnte::all(['CodTipoEnte', 'NombreEnte']);
+    $municipios = Municipio::with('parroquias:CodParroquia,NombreParroquia,Municipio_FK')
+                    ->get(['CodMunicipio', 'NombreMunicipio']);
+    
+    // Separar la cédula (Tipo y Número) para el formulario
+    // Asumiendo que los primeros 2 caracteres son el tipo (ej. "V-")
+    $tipo_cedula_actual = substr($solicitud->persona->CedulaPersona, 0, 2); 
+    $cedula_numero_actual = substr($solicitud->persona->CedulaPersona, 2);
+
+    return view('solicitudes.edit', compact(
+        'solicitud', 'tiposEnte', 'municipios', 'tipo_cedula_actual', 'cedula_numero_actual'
+    ));
+}
+
+public function update(Request $request, $id)
+{
+    $solicitud = Solicitud::findOrFail($id);
+
+    // 1. Validación (Igual al store, pero ajustando el unique de Nro_UAC para ignorar el actual)
+    $validatedData = $request->validate([
+        'tipo_cedula' => ['required', 'string', 'max:2', Rule::in(['V-', 'E-', 'J-', 'P-', 'G-'])],
+        'cedula' => ['required', 'string', 'max:20'],
+        'nombres' => 'required|string|max:100',
+        'apellidos' => 'required|string|max:100',
+        'telefono' => 'required|string|max:15',
+        'parroquia_id' => 'required|integer', 
+        'email' => 'nullable|email',
+        
+        // Ignoramos el ID actual para que no de error si no cambiamos el Nro UAC
+        'nro_uac' => ['nullable', 'string', 'max:50', Rule::unique('solicitud', 'Nro_UAC')->ignore($solicitud->CodSolicitud, 'CodSolicitud')],
+        
+        'tipo_solicitud_planilla' => 'required|string',
+        'descripcion' => 'required|string',
+        'tipo_solicitante' => 'required|string',
+        'nivel_urgencia' => 'required|string',
+        
+        'fecha_solicitud' => 'required|date', // Transcripción Paso 1
+        'fecha_atencion' => 'required|date',  // Transcripción Paso 2
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        // 2. Actualizar Persona
+        $cedulaCompleta = $validatedData['tipo_cedula'] . $validatedData['cedula'];
+        
+        // Nota: Si cambian la cédula, hay que tener cuidado. 
+        // Lo ideal es actualizar la persona existente vinculada.
+        $persona = $solicitud->persona;
+        $persona->update([
+            'CedulaPersona' => $cedulaCompleta, // Cuidado: esto cambia la PK, Laravel puede quejarse si no está configurado cascade
+            'NombresPersona' => $validatedData['nombres'],
+            'ApellidosPersona' => $validatedData['apellidos'],
+            'TelefonoPersona' => $validatedData['telefono'],
+            'ParroquiaPersona_FK' => $validatedData['parroquia_id'],
+            'CorreoElectronicoPersona' => $validatedData['email'] ?? '',
+        ]);
+
+        // 3. Actualizar Solicitud
+        $solicitud->update([
+            'TipoSolicitudPlanilla' => $validatedData['tipo_solicitud_planilla'],
+            'DescripcionSolicitud' => $validatedData['descripcion'],
+            'FechaSolicitud' => $validatedData['fecha_solicitud'], // Actualiza fecha del papel
+            'FechaAtención' => $validatedData['fecha_atencion'], // Actualiza fecha de recepción
+            'TipoSolicitante' => $validatedData['tipo_solicitante'],
+            'NivelUrgencia' => $validatedData['nivel_urgencia'],
+            'Nro_UAC' => $validatedData['nro_uac'],
+            // Actualizamos la FK de persona por si cambió la cédula
+            'CedulaPersona_FK' => $cedulaCompleta, 
+        ]);
+
+        // 4. Actualizar Correspondencia (opcional, datos básicos)
+        if ($solicitud->correspondencia) {
+            $solicitud->correspondencia->update([
+                'Descripcion' => $validatedData['descripcion'], // Mantener sincronizada la descripción
+                'Municipio_FK' => $persona->parroquia->Municipio_FK,
+            ]);
+        }
+
+        DB::commit();
+        return redirect()->route('solicitudes.show', $solicitud->CodSolicitud)->with('success', 'Solicitud actualizada correctamente.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->withInput()->with('error', 'Error al actualizar: ' . $e->getMessage());
+    }
+}
     
 
 }
