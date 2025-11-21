@@ -15,9 +15,8 @@
         <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
-                    <img src="{{ asset('images/logo_corpointa.png') }}" alt="Logo Corpointa" style="height: 40px; margin-right: 10px;">
-                    SGS Corpointa
-                </a>
+                    <img src="{{ asset('images/logo_corpointa.png') }}" alt="Logo Corpointa" style="height: 30px; margin-right: 10px;">
+                    ✦ </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -33,6 +32,12 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('solicitudes.history') }}">Historial</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('solicitudes.anuladas') }}">
+                                    <i class="bi bi-trash3"></i> Anuladas
+                                </a>
                             </li>
                         @endauth
                     </ul>

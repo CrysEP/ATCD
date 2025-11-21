@@ -28,7 +28,10 @@ Route::middleware(['auth'])->group(function () {
 
   // Ruta para ver el historial (DEBE IR PRIMERO)
     Route::get('/solicitudes/historial', [SolicitudController::class, 'history'])->name('solicitudes.history');
-    
+   
+   // --- NUEVA RUTA ---
+    Route::get('/solicitudes/anuladas', [SolicitudController::class, 'anuladas'])->name('solicitudes.anuladas');
+     
     // Ver Detalles (DEBE IR DESPUÉS DE LAS RUTAS ESTÁTICAS)
     Route::get('/solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
 
@@ -38,6 +41,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/solicitudes/{id}/editar', [SolicitudController::class, 'edit'])->name('solicitudes.edit');
     Route::put('/solicitudes/{id}', [SolicitudController::class, 'update'])->name('solicitudes.update');
 
+
+    // Ruta para anular (eliminación lógica)
+    Route::put('/solicitudes/{id}/anular', [SolicitudController::class, 'anular'])->name('solicitudes.anular');
+
+    
 });
 
 

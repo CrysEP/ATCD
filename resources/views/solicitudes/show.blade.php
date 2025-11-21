@@ -44,6 +44,22 @@
             <i class="bi bi-pencil-square"></i> Editar Datos
         </a>
 
+        {{-- BOTÓN ANULAR SOLICITUD --}}        
+
+        @if($solicitud->correspondencia->StatusSolicitud_FK != 7)
+            <button type="button" class="btn btn-danger" onclick="confirmarAnulacion()">
+                <i class="bi bi-trash"></i> Anular
+            </button>
+
+            {{-- Formulario oculto para anular--}}
+            <form id="form-anular" action="{{ route('solicitudes.anular', $solicitud->CodSolicitud) }}" method="POST" style="display: none;">
+                @csrf
+                @method('PUT')
+            </form>
+        @else
+            <button class="btn btn-secondary" disabled>Solicitud Anulada</button>
+        @endif
+
         <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
             &larr; Volver a la Agenda
         </a>
@@ -222,4 +238,13 @@
             </div>
     </div>
 </div>
+
+
+<script>
+    function confirmarAnulacion() {
+        if (confirm('¿Está seguro de que desea ANULAR esta solicitud?\n\nEsta acción no borrará el registro, pero lo sacará de la lista de pendientes.')) {
+            document.getElementById('form-anular').submit();
+        }
+    }
+</script>
 @endsection

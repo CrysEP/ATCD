@@ -29,7 +29,8 @@ class SolicitudController extends Controller
 
         // Obtener solo solicitudes NO resueltas (Status != 6)
         $query->whereHas('correspondencia', function ($q) {
-            $q->where('StatusSolicitud_FK', '!=', 6); // 6 = Resuelta
+            $q->where('StatusSolicitud_FK', '!=', 6) // No resueltas
+              ->where('StatusSolicitud_FK', '!=', 7); // No anuladas
         });
 
         // --- Aplicar Filtros (Ejemplos) ---
@@ -421,6 +422,44 @@ public function update(Request $request, $id)
         return back()->withInput()->with('error', 'Error al actualizar: ' . $e->getMessage());
     }
 }
+
+
+
+/** Anula una solicitud (No la borra, cambia su estado a 7). **/
+    public function anular($id)
+    {
+        try {
+            $solicitud = Solicitud::findOrFail($id);
+            
+            // Buscamos la correspondencia y cambiamos el status a 7 (Anulada)
+            // Asumiendo que la relación ya existe
+            if($solicitud->correspondencia) {
+                $solicitud->correspondencia->update([
+                    'StatusSolicitud_FK' => 7, 
+                    'Observacion' => $solicitud->correspondencia->Observacion . "\n[ANULADA por " . auth()->user()->NombreUsuario . " el " . now() . "]",
+                ]);
+            }
+
+            return redirect()->route('dashboard')->with('success', 'La solicitud ha sido anulada correctamente.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al anular: ' . $e->getMessage());
+        }
+    }
     
+
+
+    /** Muestra el historial de solicitudes ANULADAS (Papelera).**/
+public function anuladas(Request $request)
+    {
+        $solicitudes = Solicitud::whereHas('correspondencia', function ($q) {
+            $q->where('StatusSolicitud_FK', 7); // 7 = Anulada
+        })
+        ->with(['persona.parroquia.municipio', 'correspondencia.status'])
+        ->orderBy('CodSolicitud', 'desc') 
+        ->paginate(20);
+
+        return view('solicitudes.anuladas', compact('solicitudes'));
+    }
 
 }
