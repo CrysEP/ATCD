@@ -19,17 +19,27 @@
                 <a href="{{ route('solicitudes.show', $solicitud->CodSolicitud) }}" class="list-group-item list-group-item-action mb-3 p-3 shadow-sm border-0">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1 text-dark">
-                            @if ($solicitud->Nro_UAC)
-                                <span class="fw-bold">Nro. UAC:</span> {{ $solicitud->Nro_UAC }}
-                            @else
-                                <span class="fw-bold">{{ $solicitud->persona->NombreCompleto }}</span>
-                            @endif
-                        </h5>
-                        <small class="text-muted">{{ $solicitud->FechaSolicitud->diffForHumans() }}</small>
+
+                      {{-- 1. Prioridad: Código Interno Nuevo (Prefijo-Numero) --}}
+        @if ($solicitud->correspondencia && $solicitud->correspondencia->CodigoInterno)
+            <span class="fw-bold">{{ $solicitud->correspondencia->CodigoInterno }}</span>
+        
+        {{-- 2. Fallback: Nro UAC (si existe) --}}
+        @elseif ($solicitud->Nro_UAC)
+            <span class="fw-bold">UAC: {{ $solicitud->Nro_UAC }}</span>
+        
+        {{-- 3. Último recurso: Nombre (por si acaso hay datos viejos sin código) --}}
+        @else
+            <span class="fw-bold">{{ $solicitud->persona->NombreCompleto }}</span>
+        @endif
+    </h5>
+    <small class="text-muted">{{ $solicitud->FechaSolicitud->diffForHumans() }}</small>
+                    
                     </div>
 
                     <p class="mb-1">
-                        {{ \Illuminate\Support\Str::limit($solicitud->DescripcionSolicitud, 150) }}
+                       <strong>Solicitante:</strong> {{ $solicitud->persona->NombreCompleto }} <br>
+                         {{ \Illuminate\Support\Str::limit($solicitud->DescripcionSolicitud, 150) }}
                     </p>
 
                     <div class="mt-2">

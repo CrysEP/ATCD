@@ -25,7 +25,7 @@
             @if (session('error'))
     <div class="alert alert-danger" role="alert">
         <h4 class="alert-heading">¡Error al Guardar!</h4>
-        <p>Ocurrió un error inesperado al intentar guardar en la base de datos:</p>
+        <p>Ocurrió un error inesperado al intentar guardar los datos:</p>
         <hr>
         <p class="mb-0">{{ session('error') }}</p>
     </div>
@@ -52,7 +52,7 @@
             <option value="G-">G - Gobierno</option>
         </select>
         {{-- Campo de texto para el número de cédula --}}
-        <input type="text" class="form-control" id="cedula" name="cedula" placeholder="Número de Cédula" required title="Ingrese su identificación según la letra que corresponda" >
+        <input type="text" class="form-control" id="cedula" name="cedula" placeholder="Número de Cédula" required title="Ingrese su identificación según la letra que corresponda" maxlenght="20" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
     </div>
     @error('tipo_cedula')
         <div class="text-danger">{{ $message }}</div>
@@ -63,20 +63,20 @@
 </div>
                         <div class="col-md-4">
                             <label for="nombres" class="form-label">Nombres *</label>
-                            <input type="text" class="form-control" id="nombres" name="nombres" value="{{ old('nombres') }}" required title="Ingrese primer, segundo y/o tercer nombre">
+                            <input type="text" class="form-control" id="nombres" name="nombres" value="{{ old('nombres') }}" required title="Ingrese primer, segundo y/o tercer nombre" maxlenght="100" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')">
                         </div>
                         <div class="col-md-4">
                             <label for="apellidos" class="form-label">Apellidos *</label>
-                            <input type="text" class="form-control" id="apellidos" name="apellidos" value="{{ old('apellidos') }}" required title="Ingrese apellidos">
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" value="{{ old('apellidos') }}" required title="Ingrese apellidos" maxlength="100" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')">
                         </div>
 
                         <div class="col-md-4">
                             <label for="telefono" class="form-label">Teléfono *</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono" value="{{ old('telefono') }}" required title="Introduce un número válido de 11 dígitos. Ej: 04141234567 o 02121234567">
+                            <input type="tel" class="form-control" id="telefono" name="telefono" value="{{ old('telefono') }}" required title="Introduce un número válido de 11 dígitos. Ej: 04141234567 o 02121234567" maxlength="14" oninput="this.value = this.value.replace(/[^0-9\-\+\s\(\)]/g, '')">
                         </div>
                         <div class="col-md-8">
                             <label for="email" class="form-label">Correo Electrónico *</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required title="Ejemplo correo@gmail.com, correo@outlook.com">
+                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required title="Ejemplo correo@gmail.com, correo@outlook.com" maxlength="200">
                         </div>
 
                         <div class="col-md-6">
@@ -117,7 +117,7 @@
     </div>
                         <div class="col-md-3">
                             <label for="nro_uac" class="form-label">Nro. UAC (Opcional):</label>
-                            <input type="text" class="form-control" id="nro_uac" name="nro_uac" value="{{ old('nro_uac') }}">
+                            <input type="text" class="form-control" id="nro_uac" name="nro_uac" value="{{ old('nro_uac') }}" maxlength="50" placeholder="Número de UAC asignado">
                         </div>
                         <div class="col-md-3">
                             <label for="tipo_solicitante" class="form-label">Tipo de Solicitante:</label>
@@ -127,15 +127,21 @@
                                 <option value="Consejo Comunal" @if(old('tipo_solicitante') == 'Consejo Comunal') selected @endif>Consejo Comunal</option>
                             </select>
                         </div>
-                         <div class="col-md-3">
-                            <label for="tipo_ente" class="form-label">Categoría (Ente):</label>
-                            <select class="form-select" id="tipo_ente" name="tipo_ente">
-                                <option value="">-- Seleccione Categoría --</option>
-                                @foreach ($tiposEnte as $ente)
-                                    <option value="{{ $ente->CodTipoEnte }}">{{ $ente->NombreEnte }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                       
+                       
+                        <div class="col-md-3">
+    <label for="tipo_ente" class="form-label">Categoría (Ente) *:</label>
+    {{-- Asegúrate que el name sea "tipo_ente" --}}
+    <select class="form-select" id="tipo_ente" name="tipo_ente" required>
+        <option value="" disabled selected>-- Seleccione --</option>
+        @foreach ($tiposEnte as $ente)
+            {{-- Mostramos el Nombre y el Prefijo para guiar al usuario --}}
+            <option value="{{ $ente->CodTipoEnte }}" @selected(old('tipo_ente') == $ente->CodTipoEnte)>
+                {{ $ente->NombreEnte }} ({{ $ente->PrefijoCodigo }})
+            </option>
+        @endforeach
+    </select>
+</div>
 
                         <div class="col-md-6">
                             <label for="tipo_solicitud_planilla" class="form-label">Tipo de Planilla:</label>
@@ -156,7 +162,7 @@
 
                         <div class="col-12">
                             <label for="descripcion" class="form-label">Descripción de la Solicitud:</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required>{{ old('descripcion') }}</textarea>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required maxlength="1000">{{ old('descripcion') }}</textarea>
                         </div>
                         
                         <div class="col-12">

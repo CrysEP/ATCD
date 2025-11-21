@@ -103,12 +103,12 @@ class SolicitudController extends Controller
         // --- 1. Validación (Añadir reglas según sea necesario) ---
         $validatedData = $request->validate([
             'tipo_cedula' => ['required', 'string', 'max:2', Rule::in(['V-', 'E-', 'J-', 'P-', 'G-'])],
-            'cedula' => 'required|string|max:20',
-            'nombres' => 'required|string|max:100',
-            'apellidos' => 'required|string|max:100',
-            'telefono' => 'required|string|max:15',
+            'cedula' => 'required|string|max:20|regex:/^[0-9]+$/',
+            'nombres' => 'required|string|max:100|regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/',
+            'apellidos' => 'required|string|max:100|regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/',
+            'telefono' => 'required|string|max:15|regex:/^[0-9\-\+\s\(\)]+$/',
             'parroquia_id' => 'required|integer', 
-            'email' => 'nullable|email',
+            'email' => 'nullable|email|max:300|email:filter', 
             
             'nro_uac' => 'nullable|string|max:50|unique:solicitud,Nro_UAC',
             'tipo_solicitud_planilla' => 'required|string', // Enum
@@ -120,9 +120,12 @@ class SolicitudController extends Controller
 
             'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240', // max 10MB, por ahora o.o
             'fecha_atencion' => 'required|date',  //Esta quedó como la fecha de creación de la planilla en físico
-            'fecha_solicitud' => 'required|date' //Esta quedó como la fecha de atención del formato en físico, creo
+            'fecha_solicitud' => 'required|date', //Esta quedó como la fecha de atención del formato en físico, creo
+
+            'tipo_ente' => 'required|integer|exists:tipo_ente,CodTipoEnte'
     
-        ]);
+    
+    ]);
 
         // Iniciar transacción de base de datos
         DB::beginTransaction();
@@ -168,11 +171,23 @@ class SolicitudController extends Controller
             
             // --- 4. Crear Relación de Correspondencia (Vínculo al Status) ---
             // El estado inicial siempre es 'Pendiente' (ID 1, según tu seeder)
-            $codigoInterno = 'CI-' . date('Ymd-His') . '-' . Str::random(4); // Generar un código único
+           // $codigoInterno = 'CI-' . date('Ymd-His') . '-' . Str::random(4); //El que sirve
+
+
+            // 1. Buscar el Tipo de Ente seleccionado
+    $ente = TipoEnte::findOrFail($validatedData['tipo_ente']);
+
+    // 2. Incrementar el contador de ese ente (ej: de 176 pasa a 177)
+    $ente->increment('ContadorActual');
+
+    // 3. Generar el código (Ej: CO + - + 00177)
+    // str_pad rellena con ceros a la izquierda hasta llegar a 5 dígitos
+    $codigoInterno = $ente->PrefijoCodigo . '-' . str_pad($ente->ContadorActual, 5, '0', STR_PAD_LEFT);
 
             $correspondencia = RelacionCorrespondencia::create([
                 'CodigoInterno' => $codigoInterno,
                 'Solicitud_FK' => $solicitud->CodSolicitud,
+                'TipoEnte_FK' => $ente->CodTipoEnte,
                 'Nro_Oficio' => $request->nro_oficio ?? 'N/A',
                 'FechaOficioEntrega' => now(),
                 'FechaRecibido' => now(),
@@ -310,7 +325,7 @@ class SolicitudController extends Controller
 
 
 
-    
+
 
     public function edit($id)
 {
@@ -330,6 +345,8 @@ class SolicitudController extends Controller
         'solicitud', 'tiposEnte', 'municipios', 'tipo_cedula_actual', 'cedula_numero_actual'
     ));
 }
+
+
 
 public function update(Request $request, $id)
 {

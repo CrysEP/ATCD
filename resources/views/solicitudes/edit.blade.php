@@ -24,6 +24,12 @@
                 </div>
             @endif
 
+            @if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Error:</strong> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
             {{-- 1. Datos del Solicitante --}}
             <div class="card card-gradient-body shadow-sm mb-4 border-0">
                 <div class="card-header bg-warning text-dark">
@@ -31,11 +37,11 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-3">
-                        {{-- CÉDULA DIVIDIDA --}}
+                    
                         <div class="col-md-4">
                             <label for="tipo_cedula" class="form-label">Cédula *</label>
                             <div class="input-group">
-                                <select class="form-select" id="tipo_cedula" name="tipo_cedula" required style="max-width: 80px;">
+                                <select class="form-select" id="tipo_cedula" name="tipo_cedula" style="max-width: 80px;">
                                     <option value="V-" @selected(old('tipo_cedula', $tipo_cedula_actual) == 'V-')>V-</option>
                                     <option value="E-" @selected(old('tipo_cedula', $tipo_cedula_actual) == 'E-')>E-</option>
                                     <option value="J-" @selected(old('tipo_cedula', $tipo_cedula_actual) == 'J-')>J-</option>
@@ -43,25 +49,25 @@
                                     <option value="G-" @selected(old('tipo_cedula', $tipo_cedula_actual) == 'G-')>G-</option>
                                 </select>
                                 <input type="text" class="form-control" id="cedula" name="cedula" 
-                                       value="{{ old('cedula', $cedula_numero_actual) }}" required>
+                                       value="{{ old('cedula', $cedula_numero_actual) }}"  title="Cambie su identificación según la letra que corresponda" maxlength="20" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                             </div>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Nombres *</label>
-                            <input type="text" class="form-control" name="nombres" value="{{ old('nombres', $solicitud->persona->NombresPersona) }}" required>
+                            <input type="text" class="form-control" name="nombres" value="{{ old('nombres', $solicitud->persona->NombresPersona) }}" maxlength="100" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Apellidos *</label>
-                            <input type="text" class="form-control" name="apellidos" value="{{ old('apellidos', $solicitud->persona->ApellidosPersona) }}" required>
+                            <input type="text" class="form-control" name="apellidos" value="{{ old('apellidos', $solicitud->persona->ApellidosPersona) }}" maxlength="100" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Teléfono *</label>
-                            <input type="tel" class="form-control" name="telefono" value="{{ old('telefono', $solicitud->persona->TelefonoPersona) }}" required>
+                            <input type="tel" class="form-control" name="telefono" value="{{ old('telefono', $solicitud->persona->TelefonoPersona) }}" maxlength="14" oninput="this.value = this.value.replace(/[^0-9\-\+\s\(\)]/g, '')">
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" value="{{ old('email', $solicitud->persona->CorreoElectronicoPersona) }}">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" name="email" value="{{ old('email', $solicitud->persona->CorreoElectronicoPersona) }}" maxlength="200">
                         </div>
 
                         {{-- MUNICIPIO Y PARROQUIA (Lógica JS necesaria abajo) --}}
@@ -78,11 +84,22 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Parroquia:</label>
-                            <select class="form-select" id="parroquia_id" name="parroquia_id" required>
-                                <option value="{{ $solicitud->persona->ParroquiaPersona_FK }}" selected>
-                                    {{ $solicitud->persona->parroquia->NombreParroquia }} (Actual)
-                                </option>
-                            </select>
+                           <select class="form-select" id="parroquia_id" name="parroquia_id" required>
+
+                           
+                        {{-- Recorremos los municipios para encontrar el actual y mostrar sus parroquias --}}
+                        @foreach ($municipios as $m)
+                            @if($m->CodMunicipio == $solicitud->persona->parroquia->Municipio_FK)
+                                @foreach($m->parroquias as $p)
+                                    <option value="{{ $p->CodParroquia }}" 
+                                        @selected($p->CodParroquia == $solicitud->persona->ParroquiaPersona_FK)>
+                                        {{ $p->NombreParroquia }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        @endforeach
+                    </select>
+
                         </div>
                     </div>
                 </div>

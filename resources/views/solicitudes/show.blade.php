@@ -4,6 +4,18 @@
 
 @section('content')
 
+@if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill fs-4 me-2"></i>
+                <div>
+                    <strong>¡Éxito!</strong> {{ session('success') }}
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-0">
@@ -27,7 +39,7 @@
     </a> -->
 
     <div class="d-flex gap-2">
-        {{-- BOTÓN EDITAR (NUEVO) --}}
+     
         <a href="{{ route('solicitudes.edit', $solicitud->CodSolicitud) }}" class="btn btn-warning text-dark">
             <i class="bi bi-pencil-square"></i> Editar Datos
         </a>
