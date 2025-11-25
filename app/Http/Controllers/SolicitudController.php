@@ -91,9 +91,53 @@ class SolicitudController extends Controller
        // 2. Cargar datos del funcionario logueado 
         $funcionario = Usuario::with('persona', 'funcionarioData')->find(Auth::id());
 
-        // 3. Retornar la vista NUEVA pasando los datos
-        return view('solicitudes.create', compact('tiposEnte', 'municipios', 'funcionario'));
-    }
+$categorias = [
+        'servicio_publico' => [
+            'label' => 'Servicios Públicos',
+            'opciones' => [
+                'Acueductos', 'Aguas Servidas (Cloacas)', 'Canalizaciones', 'Caños', 
+                'Causes', 'Cuencas', 'Drenajes', 'Embaulamientos', 'Pozos Profundos', 
+                'Aguas Pluviales', 'Sistema de Riego', 'Tanques de Almacenamiento', 
+                'Torrentera', 'Alumbrado' // Alumbrado viene de TendidosElectricos
+            ]
+        ],
+        'infraestructura_vial' => [
+            'label' => 'Infraestructura Vial',
+            'opciones' => [
+                'Aceras', 'Bateas', 'Brocales', 'Vías, calles, carreteras, Vereda', 
+                'Cajones', 'Alcantarillas', 'Cuñetas', 'Demarcación Vial', 
+                'Estabilización de Talud', 'Falla de Borde', 'Pasarelas', 
+                'Pavimentos Flexibles (Asfaltados)', 'Pavimento Rígido', 'Puentes'
+            ]
+        ],
+        'fortalecimiento_instituciones' => [
+            'label' => 'Fortalecimiento Inst.',
+            'opciones' => [
+                'Infraestructuras Asistenciales', 'Infraestructuras Educativas', 
+                'Infraestructuras Gubernamentales', 'Instituciones Religiosas', 
+                'Muros Diques', 'Pared Perimetrales'
+            ]
+        ],
+        'apoyo_instituciones' => [
+            'label' => 'Apoyo a Instituciones',
+            'opciones' => [
+                'Maquinarias', 'Camiones', 'Materiales', 
+                'Cuadrillas, Obreros, Albañiles...', 'Levantamientos Topográficos', 
+                'Estudios de Suelos', 'Informes de Inspección', 'Proyectos'
+            ]
+        ],
+        'apoyo_ciudadania' => [
+            'label' => 'Apoyo a la Ciudadanía',
+            'opciones' => [
+                'Pasantías', 'Comisiones de Servicio', 'Sínstesis Curriculares', 
+                'Gubernamental a la Corporación', 'Empresas', 'Otros'
+            ]
+        ],
+    ];
+
+    return view('solicitudes.create', compact('tiposEnte', 'municipios', 'funcionario', 'categorias'));
+}
+    
 
     /**
      * Almacena una nueva solicitud en la base de datos.
@@ -123,7 +167,10 @@ class SolicitudController extends Controller
             'fecha_atencion' => 'required|date',  //Esta quedó como la fecha de creación de la planilla en físico
             'fecha_solicitud' => 'required|date', //Esta quedó como la fecha de atención del formato en físico, creo
 
-            'tipo_ente' => 'required|integer|exists:tipo_ente,CodTipoEnte'
+            'tipo_ente' => 'required|integer|exists:tipo_ente,CodTipoEnte',
+
+            'categoria_solicitud' => 'required|string',
+            'detalle_solicitud' => 'required|string'
     
     
     ]);
@@ -218,6 +265,59 @@ class SolicitudController extends Controller
                 }
             }
             
+
+$cat = $request->categoria_solicitud;
+            $det = $request->detalle_solicitud;
+            $tipoId = null; // Guardará el ID de la tabla específica
+
+            // Variables para las FKs
+            $fk_servicio = null;
+            $fk_infra = null;
+            $fk_fortalecimiento = null;
+            $fk_apoyo_inst = null;
+            $fk_apoyo_ciud = null;
+
+            // Insertar en la tabla específica según la categoría
+            if ($cat == 'servicio_publico') {
+                // Detectar si es alumbrado (el único de TendidosElectricos) o Hidraulico
+                $columna = ($det == 'Alumbrado') ? 'TendidosElectricos' : 'Hidraulicos';
+                $id = DB::table('servicio_publico')->insertGetId([$columna => $det]);
+                $fk_servicio = $id;
+            } 
+            elseif ($cat == 'infraestructura_vial') {
+                $id = DB::table('infraestructura_vial')->insertGetId(['Vialidad' => $det]);
+                $fk_infra = $id;
+            }
+            elseif ($cat == 'fortalecimiento_instituciones') {
+                $id = DB::table('fortalecimiento_instituciones')->insertGetId(['Edificaciones' => $det]);
+                $fk_fortalecimiento = $id;
+            }
+            elseif ($cat == 'apoyo_instituciones') {
+                $id = DB::table('apoyo_instituciones')->insertGetId(['EquipoMateriales' => $det]);
+                $fk_apoyo_inst = $id;
+            }
+            elseif ($cat == 'apoyo_ciudadania') {
+                $id = DB::table('apoyo_ciudadania')->insertGetId(['ApoyoCiudadania' => $det]);
+                $fk_apoyo_ciud = $id;
+            }
+
+            // Crear registro en la tabla intermedia 'tipo_solicitud'
+            $codTipoSolicitud = 'tsl_' . uniqid();// Generamos un ID único temporal
+            
+            DB::table('tipo_solicitud')->insert([
+                'CodTipoSolicitud' => $codTipoSolicitud,
+                'ServicioPublico_FK' => $fk_servicio,
+                'InfraestructuraVial_FK' => $fk_infra,
+                'FortalecimientoInstituciones_FK' => $fk_fortalecimiento,
+                'ApoyoInstituciones_FK' => $fk_apoyo_inst,
+                'ApoyoCiudadania_FK' => $fk_apoyo_ciud,
+            ]);
+
+            // Actualizar la Solicitud principal con este vínculo
+            $solicitud->update(['TipoSolicitud_FK' => $codTipoSolicitud]);
+
+
+
             // Si todo fue exitoso, confirmar la transacción
             DB::commit();
 
@@ -234,7 +334,7 @@ class SolicitudController extends Controller
     /**
      * Muestra la vista de detalle de una solicitud.
      */
-    public function show($id)
+   public function show($id)
     {
         $solicitud = Solicitud::with([
             'persona.parroquia.municipio', 
@@ -243,9 +343,73 @@ class SolicitudController extends Controller
             'funcionario.persona'
         ])->findOrFail($id);
 
-        $statuses = StatusSolicitud::all(); // Para el modal de cambio de estado
+        $statuses = StatusSolicitud::all(); 
 
-        return view('solicitudes.show', compact('solicitud', 'statuses'));
+        // 1. DEFINIR LAS OPCIONES (Necesario para el modal)
+        $categorias = [
+            'servicio_publico' => [
+                'label' => 'Servicios Públicos',
+                'opciones' => ['Acueductos', 'Aguas Servidas (Cloacas)', 'Canalizaciones', 'Caños', 'Causes', 'Cuencas', 'Drenajes', 'Embaulamientos', 'Pozos Profundos', 'Aguas Pluviales', 'Sistema de Riego', 'Tanques de Almacenamiento', 'Torrentera', 'Alumbrado']
+            ],
+            'infraestructura_vial' => [
+                'label' => 'Infraestructura Vial',
+                'opciones' => ['Aceras', 'Bateas', 'Brocales', 'Vías, calles, carreteras, Vereda', 'Cajones', 'Alcantarillas', 'Cuñetas', 'Demarcación Vial', 'Estabilización de Talud', 'Falla de Borde', 'Pasarelas', 'Pavimentos Flexibles (Asfaltados)', 'Pavimento Rígido', 'Puentes']
+            ],
+            'fortalecimiento_instituciones' => [
+                'label' => 'Fortalecimiento Inst.',
+                'opciones' => ['Infraestructuras Asistenciales', 'Infraestructuras Educativas', 'Infraestructuras Gubernamentales', 'Instituciones Religiosas', 'Muros Diques', 'Pared Perimetrales']
+            ],
+            'apoyo_instituciones' => [
+                'label' => 'Apoyo a Instituciones',
+                'opciones' => ['Maquinarias', 'Camiones', 'Materiales', 'Cuadrillas, Obreros, Albañiles...', 'Levantamientos Topográficos', 'Estudios de Suelos', 'Informes de Inspección', 'Proyectos']
+            ],
+            'apoyo_ciudadania' => [
+                'label' => 'Apoyo a la Ciudadanía',
+                'opciones' => ['Pasantías', 'Comisiones de Servicio', 'Sínstesis Curriculares', 'Gubernamental a la Corporación', 'Empresas', 'Otros']
+            ],
+        ];
+
+        // 2. DETECTAR CATEGORÍA Y DETALLE ACTUAL
+        $tipoActual = DB::table('tipo_solicitud')->where('CodTipoSolicitud', $solicitud->TipoSolicitud_FK)->first();
+        
+        $catActual = null;
+        $detActual = null;
+
+        if ($tipoActual) {
+            if ($tipoActual->ServicioPublico_FK) {
+                $catActual = 'servicio_publico';
+                // CORRECCIÓN: Usamos el nombre real de la columna ID
+                $reg = DB::table('servicio_publico')->where('CodServicioPublico', $tipoActual->ServicioPublico_FK)->first();
+                $detActual = $reg ? ($reg->TendidosElectricos ?? $reg->Hidraulicos) : null;
+            
+            } elseif ($tipoActual->InfraestructuraVial_FK) {
+                $catActual = 'infraestructura_vial';
+                $detActual = DB::table('infraestructura_vial')
+                                ->where('CodInfraestructuraVial', $tipoActual->InfraestructuraVial_FK)
+                                ->value('Vialidad');
+            
+            } elseif ($tipoActual->FortalecimientoInstituciones_FK) {
+                $catActual = 'fortalecimiento_instituciones';
+                $detActual = DB::table('fortalecimiento_instituciones')
+                                ->where('CodFortalecimientoInstituciones', $tipoActual->FortalecimientoInstituciones_FK)
+                                ->value('Edificaciones');
+            
+            } elseif ($tipoActual->ApoyoInstituciones_FK) {
+                $catActual = 'apoyo_instituciones';
+                $detActual = DB::table('apoyo_instituciones')
+                                ->where('CodApoyoInstituciones', $tipoActual->ApoyoInstituciones_FK)
+                                ->value('EquipoMateriales');
+            
+            } elseif ($tipoActual->ApoyoCiudadania_FK) {
+                $catActual = 'apoyo_ciudadania';
+                $detActual = DB::table('apoyo_ciudadania')
+                                ->where('CodApoyoCiudadania', $tipoActual->ApoyoCiudadania_FK)
+                                ->value('ApoyoCiudadania');
+            }
+        }
+
+        // 3. ENVIAR VARIABLES A LA VISTA (Aquí es donde fallaba antes)
+        return view('solicitudes.show', compact('solicitud', 'statuses', 'categorias', 'catActual', 'detActual'));
     }
 
     /**
@@ -256,6 +420,11 @@ class SolicitudController extends Controller
         $request->validate(['status_id' => 'required|integer|exists:status_solicitud,CodStatusSolicitud']);
         
         $solicitud = Solicitud::findOrFail($id);
+
+        // BLOQUEO DE SEGURIDAD (Opcional: si quieres impedir reactivarlas)
+        if ($solicitud->correspondencia->StatusSolicitud_FK == 7) {
+            return back()->with('error', 'Esta solicitud está ANULADA y no puede cambiar de estado.');
+        }
         
         // El estado está en la tabla 'relacion_correspondencia'
         $solicitud->correspondencia->update([
@@ -300,27 +469,80 @@ class SolicitudController extends Controller
 /**
      * Actualiza los datos del flujo de correspondencia (Nro Oficio, Instrucciones).
      */
-    public function updateFlujo(Request $request, $id)
+public function updateFlujo(Request $request, $id)
     {
-        // 1. Validar los datos del modal
+        // 1. Validar
         $validatedData = $request->validate([
             'Nro_Oficio' => 'required|string|max:100',
             'InstruccionPresidencia' => 'nullable|string',
             'Observacion' => 'nullable|string',
+            // Validamos el nuevo campo
+            'TipoSolicitudPlanilla' => 'required|string',
+            'categoria_solicitud' => 'required|string',
+            'detalle_solicitud' => 'required|string'
         ]);
 
         try {
-            // 2. Buscar la solicitud y su correspondencia
             $solicitud = Solicitud::findOrFail($id);
             
-            // 3. Actualizar la correspondencia con los datos validados
-            $solicitud->correspondencia->update($validatedData);
+            // 2. Actualizar la correspondencia (Datos del flujo)
+            $solicitud->correspondencia->update([
+                'Nro_Oficio' => $validatedData['Nro_Oficio'],
+                'InstruccionPresidencia' => $validatedData['InstruccionPresidencia'] ?? '',
+                'Observacion' => $validatedData['Observacion'] ?? '',
+            ]);
 
-            // 4. Redirigir atrás con éxito
-            return back()->with('success', 'Datos del flujo actualizados correctamente.');
+            // 3. Actualizar el Tipo de Solicitud en la tabla PADRE (solicitud)
+            $solicitud->update([
+                'TipoSolicitudPlanilla' => $validatedData['TipoSolicitudPlanilla']
+            ]);
+
+
+
+            // 3. ACTUALIZAR CLASIFICACIÓN (TIPO SOLICITUD)
+            $cat = $request->categoria_solicitud;
+            $det = $request->detalle_solicitud;
+
+            // Insertar el nuevo detalle en la tabla específica
+            $nuevoId = null;
+            if ($cat == 'servicio_publico') {
+                $columna = ($det == 'Alumbrado') ? 'TendidosElectricos' : 'Hidraulicos';
+                $nuevoId = DB::table('servicio_publico')->insertGetId([$columna => $det]);
+            } elseif ($cat == 'infraestructura_vial') {
+                $nuevoId = DB::table('infraestructura_vial')->insertGetId(['Vialidad' => $det]);
+            } elseif ($cat == 'fortalecimiento_instituciones') {
+                $nuevoId = DB::table('fortalecimiento_instituciones')->insertGetId(['Edificaciones' => $det]);
+            } elseif ($cat == 'apoyo_instituciones') {
+                $nuevoId = DB::table('apoyo_instituciones')->insertGetId(['EquipoMateriales' => $det]);
+            } elseif ($cat == 'apoyo_ciudadania') {
+                $nuevoId = DB::table('apoyo_ciudadania')->insertGetId(['ApoyoCiudadania' => $det]);
+            }
+
+            // Preparar datos para actualizar la tabla intermedia
+            $updateData = [
+                'ServicioPublico_FK' => ($cat == 'servicio_publico') ? $nuevoId : null,
+                'InfraestructuraVial_FK' => ($cat == 'infraestructura_vial') ? $nuevoId : null,
+                'FortalecimientoInstituciones_FK' => ($cat == 'fortalecimiento_instituciones') ? $nuevoId : null,
+                'ApoyoInstituciones_FK' => ($cat == 'apoyo_instituciones') ? $nuevoId : null,
+                'ApoyoCiudadania_FK' => ($cat == 'apoyo_ciudadania') ? $nuevoId : null,
+            ];
+
+            if ($solicitud->TipoSolicitud_FK) {
+                DB::table('tipo_solicitud')
+                    ->where('CodTipoSolicitud', $solicitud->TipoSolicitud_FK)
+                    ->update($updateData);
+            } else {
+                // Caso raro: si no tenía registro previo
+                $newCod = 'tsl_' . uniqid();
+                $updateData['CodTipoSolicitud'] = $newCod;
+                DB::table('tipo_solicitud')->insert($updateData);
+                $solicitud->update(['TipoSolicitud_FK' => $newCod]);
+            }
+
+            return back()->with('success', 'Relación correspondencia y Tipo de Solicitud actualizados correctamente.');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al actualizar el flujo: ' . $e->getMessage());
+            return back()->with('error', 'Error al actualizar: ' . $e->getMessage());
         }
     }
 
@@ -332,6 +554,13 @@ class SolicitudController extends Controller
 {
     $solicitud = Solicitud::with(['persona', 'correspondencia'])->findOrFail($id);
     
+// BLOQUEO DE SEGURIDAD
+        if ($solicitud->correspondencia && $solicitud->correspondencia->StatusSolicitud_FK == 7) {
+            return redirect()->route('solicitudes.show', $id)
+                ->with('error', 'No se puede editar una solicitud que está ANULADA.');
+        }
+
+
     // Listas para los selects
     $tiposEnte = TipoEnte::all(['CodTipoEnte', 'NombreEnte']);
     $municipios = Municipio::with('parroquias:CodParroquia,NombreParroquia,Municipio_FK')
@@ -352,6 +581,11 @@ class SolicitudController extends Controller
 public function update(Request $request, $id)
 {
     $solicitud = Solicitud::findOrFail($id);
+
+    // BLOQUEO DE SEGURIDAD
+        if ($solicitud->correspondencia && $solicitud->correspondencia->StatusSolicitud_FK == 7) {
+            return back()->with('error', 'Acción denegada: La solicitud está ANULADA.');
+        }
 
     // 1. Validación (Igual al store, pero ajustando el unique de Nro_UAC para ignorar el actual)
     $validatedData = $request->validate([

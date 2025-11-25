@@ -14,7 +14,7 @@
                 <table class="table table-striped table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th scope="col">Nro. Solicitud</th>
+                            <th scope="col">Código Interno</th>
                             <th scope="col">Ciudadano</th>
                             <th scope="col">Descripción</th>
                             <th scope="col">Fecha Solicitud</th>
@@ -25,7 +25,13 @@
                     <tbody>
                         @forelse ($solicitudes as $solicitud)
                         <tr>
-                            <td class="fw-bold text-primary">{{ $solicitud->Nro_UAC ?? $solicitud->CodSolicitud }}</td>
+                            <td class="fw-bold text-primary">
+                                @if ($solicitud->correspondencia && $solicitud->correspondencia->CodigoInterno)
+                                    {{ $solicitud->correspondencia->CodigoInterno }}
+                                @else
+                                    {{ $solicitud->Nro_UAC ?? $solicitud->CodSolicitud }}
+                                @endif
+                            </td>
                             <td>{{ $solicitud->persona->NombreCompleto }}</td>
                             <td>{{ \Illuminate\Support\Str::limit($solicitud->DescripcionSolicitud, 70) }}</td>
                             <td>{{ $solicitud->FechaSolicitud->format('d/m/Y') }}</td>

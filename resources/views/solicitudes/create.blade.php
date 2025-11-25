@@ -151,6 +151,28 @@
                                 <option value="Denuncia" @if(old('tipo_solicitud_planilla') == 'Denuncia') selected @endif>Denuncia</option>
                             </select>
                         </div>
+
+
+
+<div class="col-md-6">
+    <label for="categoria_solicitud" class="form-label">Clasificación (Área) *:</label>
+    <select class="form-select" id="categoria_solicitud" name="categoria_solicitud" required>
+        <option value="" disabled selected>-- Seleccione Área --</option>
+        @foreach ($categorias as $key => $cat)
+            <option value="{{ $key }}">{{ $cat['label'] }}</option>
+        @endforeach
+    </select>
+</div>
+
+<div class="col-md-6">
+    <label for="detalle_solicitud" class="form-label">Detalle Específico *:</label>
+    <select class="form-select" id="detalle_solicitud" name="detalle_solicitud" required>
+        <option value="" disabled selected>-- Seleccione primero el Área --</option>
+    </select>
+</div>
+
+
+
                         <div class="col-md-6">
                             <label for="nivel_urgencia" class="form-label">Nivel de Urgencia:</label>
                             <select class="form-select" id="nivel_urgencia" name="nivel_urgencia" required>
@@ -307,4 +329,26 @@
     });
 </script>
 
+<script>
+    // Pasamos el array de PHP a JS
+    const categoriasData = @json($categorias);
+
+    document.getElementById('categoria_solicitud').addEventListener('change', function() {
+        const categoriaKey = this.value;
+        const detalleSelect = document.getElementById('detalle_solicitud');
+        
+        // Limpiar opciones anteriores
+        detalleSelect.innerHTML = '<option value="" disabled selected>-- Seleccione Detalle --</option>';
+
+        if (categoriasData[categoriaKey]) {
+            // Llenar con las nuevas opciones
+            categoriasData[categoriaKey].opciones.forEach(opcion => {
+                const opt = document.createElement('option');
+                opt.value = opcion;
+                opt.textContent = opcion;
+                detalleSelect.appendChild(opt);
+            });
+        }
+    });
+</script>
 @endsection
