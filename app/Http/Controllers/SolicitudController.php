@@ -29,8 +29,7 @@ class SolicitudController extends Controller
 
         // Obtener solo solicitudes NO resueltas (Status != 6)
         $query->whereHas('correspondencia', function ($q) {
-            $q->where('StatusSolicitud_FK', '!=', 6) // No resueltas
-              ->where('StatusSolicitud_FK', '!=', 7); // No anuladas
+            $q->where('StatusSolicitud_FK', 1);
         });
 
         // --- Aplicar Filtros (Ejemplos) ---
@@ -145,6 +144,35 @@ $categorias = [
      */
     public function store(Request $request)
     {
+
+        $reglas = [
+        // ... tus otras reglas ...
+        
+        'email' => [
+            'nullable', 
+            'email', 
+            'max:200', 
+            // AQUÍ RESTRINGIMOS LOS DOMINIOS
+            'ends_with:@gmail.com,@outlook.com,@hotmail.com,@yahoo.com,@live.com' 
+        ],
+        
+        // ... tus otras reglas ...
+    ];
+
+    $mensajes = [
+        // ... tus otros mensajes ...
+
+        // Mensaje cuando falta el "@" o el formato está mal
+        'email.email' => 'El correo electrónico no es válido. Asegúrate de incluir el "@" y un dominio.',
+        
+        // Mensaje cuando el dominio no es de los permitidos
+        'email.ends_with' => 'Solo se aceptan correos de: Gmail, Outlook, Hotmail, Yahoo o Live.',
+    ];
+
+    $validatedData = $request->validate($reglas, $mensajes);
+
+
+        
         // --- 1. Validación (Añadir reglas según sea necesario) ---
         $validatedData = $request->validate([
             'tipo_cedula' => ['required', 'string', 'max:2', Rule::in(['V-', 'E-', 'J-', 'P-', 'G-'])],
@@ -171,6 +199,7 @@ $categorias = [
 
             'categoria_solicitud' => 'required|string',
             'detalle_solicitud' => 'required|string'
+            
     
     
     ]);
@@ -440,14 +469,42 @@ $cat = $request->categoria_solicitud;
      * Muestra el historial de solicitudes resueltas.
      */
     public function history(Request $request)
-    {
-        // Lógica similar a index() pero filtrando por Status = 6
-        $solicitudes = Solicitud::whereHas('correspondencia', function ($q) {
-            $q->where('StatusSolicitud_FK', 6); // 6 = Resuelta
-        })
-        ->with(['persona.parroquia.municipio', 'correspondencia.status'])
-        ->orderBy('FechaAtención', 'desc')
-        ->paginate(20);
+ {
+        // 1. Base Query: Solo solicitudes RESUELTAS (Status 6)
+        $query = Solicitud::whereHas('correspondencia', function ($q) {
+            $q->where('StatusSolicitud_FK', '!=', 1) 
+              ->where('StatusSolicitud_FK', '!=', 7); 
+        });
+
+        // 2. --- APLICAR FILTROS (Igual que en el Dashboard) ---
+        
+        // Filtro por Urgencia
+        if ($request->filled('urgencia')) {
+            $query->where('NivelUrgencia', $request->urgencia);
+        }
+
+        // Búsqueda (Cédula, UAC, Descripción, Nombre...)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('Nro_UAC', 'like', "%{$search}%")
+                  ->orWhere('DescripcionSolicitud', 'like', "%{$search}%")
+                  ->orWhereHas('persona', function ($q_persona) use ($search) {
+                      $q_persona->where('NombresPersona', 'like', "%{$search}%")
+                                ->orWhere('ApellidosPersona', 'like', "%{$search}%")
+                                ->orWhere('CedulaPersona', 'like', "%{$search}%");
+                  })
+                  // Extra: Buscar también por el Código Interno (CO-001, etc)
+                  ->orWhereHas('correspondencia', function ($q_corr) use ($search) {
+                      $q_corr->where('CodigoInterno', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 3. Ejecutar consulta
+        $solicitudes = $query->with(['persona.parroquia.municipio', 'correspondencia.status'])
+                             ->orderBy('FechaAtención', 'desc')
+                             ->paginate(20);
 
         return view('solicitudes.history', compact('solicitudes'));
     }
@@ -479,7 +536,8 @@ public function updateFlujo(Request $request, $id)
             // Validamos el nuevo campo
             'TipoSolicitudPlanilla' => 'required|string',
             'categoria_solicitud' => 'required|string',
-            'detalle_solicitud' => 'required|string'
+            'detalle_solicitud' => 'required|string',
+            'Gerencia_Jefatura' => 'nullable|string|max:255'
         ]);
 
         try {
@@ -490,6 +548,7 @@ public function updateFlujo(Request $request, $id)
                 'Nro_Oficio' => $validatedData['Nro_Oficio'],
                 'InstruccionPresidencia' => $validatedData['InstruccionPresidencia'] ?? '',
                 'Observacion' => $validatedData['Observacion'] ?? '',
+                'Gerencia_Jefatura' => $validatedData['Gerencia_Jefatura'] ?? ''
             ]);
 
             // 3. Actualizar el Tipo de Solicitud en la tabla PADRE (solicitud)
@@ -587,6 +646,36 @@ public function update(Request $request, $id)
             return back()->with('error', 'Acción denegada: La solicitud está ANULADA.');
         }
 
+
+$reglas = [
+        // ... tus otras reglas ...
+        
+        'email' => [
+            'nullable', 
+            'email', 
+            'max:200', 
+            // AQUÍ RESTRINGIMOS LOS DOMINIOS
+            'ends_with:@gmail.com,@outlook.com,@hotmail.com,@yahoo.com,@live.com' 
+        ],
+        
+        // ... tus otras reglas ...
+    ];
+
+    $mensajes = [
+        // ... tus otros mensajes ...
+
+        // Mensaje cuando falta el "@" o el formato está mal
+        'email.email' => 'El correo electrónico no es válido. Asegúrate de incluir el "@" y un dominio.',
+        
+        // Mensaje cuando el dominio no es de los permitidos
+        'email.ends_with' => 'Solo se aceptan correos de: Gmail, Outlook, Hotmail, Yahoo o Live.',
+    ];
+
+    $validatedData = $request->validate($reglas, $mensajes);
+
+
+
+        
     // 1. Validación (Igual al store, pero ajustando el unique de Nro_UAC para ignorar el actual)
     $validatedData = $request->validate([
         'tipo_cedula' => ['required', 'string', 'max:2', Rule::in(['V-', 'E-', 'J-', 'P-', 'G-'])],
@@ -694,6 +783,28 @@ public function anuladas(Request $request)
         ->paginate(20);
 
         return view('solicitudes.anuladas', compact('solicitudes'));
+    }
+
+
+
+    /** Restaura una solicitud anulada (La devuelve a estado Pendiente) **/
+    public function restaurar($id)
+    {
+        try {
+            $solicitud = Solicitud::findOrFail($id);
+            
+            if($solicitud->correspondencia) {
+                $solicitud->correspondencia->update([
+                    'StatusSolicitud_FK' => 1, // 1 = Pendiente (Volver al inicio)
+                    'Observacion' => $solicitud->correspondencia->Observacion . "\n[RESTAURADA por " . auth()->user()->NombreUsuario . " el " . now() . "]",
+                ]);
+            }
+
+            return back()->with('success', 'Solicitud restaurada exitosamente. Ahora está Pendiente.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al restaurar: ' . $e->getMessage());
+        }
     }
 
 }

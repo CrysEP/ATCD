@@ -61,7 +61,18 @@
                     @method('PUT')
                 </form>
             @else
+                {{-- ESTADO ANULADO --}}
                 <button class="btn btn-secondary" disabled>Solicitud Anulada</button>
+
+                {{-- BOTÓN RESTAURAR (NUEVO) --}}
+            <button type="button" class="btn btn-success" onclick="confirmarRestauracion()">
+                <i class="bi bi-arrow-counterclockwise"></i> Restaurar
+            </button>
+
+            <form id="form-restaurar" action="{{ route('solicitudes.restaurar', $solicitud->CodSolicitud) }}" method="POST" style="display: none;">
+                @csrf
+                @method('PUT')
+            </form>
             @endif
 
             <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
@@ -160,6 +171,7 @@
 
                     <ul class="list-group list-group-flush mb-3">
                         <li class="list-group-item px-0"><strong>Nro. Oficio:</strong> {{ $solicitud->correspondencia->Nro_Oficio ?? 'N/A' }}</li>
+                        <li class="list-group-item px-0"><strong>Gerencia/Jefatura:</strong> {{ $solicitud->correspondencia->Gerencia_Jefatura ?? 'N/A' }}</li>
                         <li class="list-group-item px-0"><strong>Tipo de Solicitud:</strong> <span class="badge bg-info text-dark">{{ $solicitud->TipoSolicitudPlanilla }}</span></li>
 
                         {{-- Visualización de la Clasificación --}}
@@ -250,6 +262,13 @@
                         </div>
 
                         <div class="mb-3">
+                <label for="Gerencia_Jefatura" class="form-label">Gerencia / Jefatura:</label>
+                <input type="text" class="form-control" id="Gerencia_Jefatura" name="Gerencia_Jefatura" 
+                placeholder="Ej: Enviado a Presidencia"
+           value="{{ $solicitud->correspondencia->Gerencia_Jefatura }}">
+                        </div>
+
+                        <div class="mb-3">
                             <label for="InstruccionPresidencia" class="form-label">Instrucciones de Presidencia:</label>
                             <textarea class="form-control" id="InstruccionPresidencia" name="InstruccionPresidencia" rows="4"
                                       placeholder="Escriba aquí el texto corregido. Esto REEMPLAZARÁ el contenido actual.">{{ $solicitud->correspondencia->InstruccionPresidencia }}</textarea>
@@ -308,6 +327,13 @@
 
     {{-- Scripts --}}
     <script>
+
+    function confirmarRestauracion() {
+        if (confirm('¿Estás seguro de que deseas RESTAURAR esta solicitud?\n\nVolverá a aparecer en la Agenda Digital como "Pendiente".')) {
+            document.getElementById('form-restaurar').submit();
+        }
+    }
+
         function confirmarAnulacion() {
             if (confirm('¿Está seguro de que desea ANULAR esta solicitud?\n\nEsta acción no borrará el registro, pero lo sacará de la lista de pendientes.')) {
                 document.getElementById('form-anular').submit();

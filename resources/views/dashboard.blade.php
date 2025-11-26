@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Agenda Digital - Solicitudes Activas')
+@section('title', 'Solicitudes pendientes')
 
 @section('content')
 <div class="row">
     <div class="col-lg-9">
-        <h2 class="mb-4">Agenda Digital (Solicitudes Activas)</h2>
+        <h2 class="mb-4">Solicitudes pendientes (nuevas)</h2>
 
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">

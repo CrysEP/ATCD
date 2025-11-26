@@ -12,7 +12,7 @@
 <body class="bg-light">
 
     <div id="app">
-        <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm">
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm sticky-top">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
                     <img src="{{ asset('images/logo_corpointa.png') }}" alt="Logo Corpointa" style="height: 30px; margin-right: 10px;">
@@ -25,13 +25,13 @@
                     <ul class="navbar-nav me-auto">
                         @auth
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('dashboard') }}">Agenda Digital</a>
+                                <a class="nav-link" href="{{ route('dashboard') }}">Solicitudes activas</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('solicitudes.create') }}">Nueva Solicitud</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('solicitudes.history') }}">Historial</a>
+                                <a class="nav-link" href="{{ route('solicitudes.history') }}">Solicitudes procesadas</a>
                             </li>
 
                             <li class="nav-item">

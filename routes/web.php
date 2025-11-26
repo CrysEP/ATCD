@@ -45,7 +45,7 @@ Route::middleware(['auth'])->group(function () {
     // Ruta para anular (eliminación lógica)
     Route::put('/solicitudes/{id}/anular', [SolicitudController::class, 'anular'])->name('solicitudes.anular');
 
-    
+    Route::put('/solicitudes/{id}/restaurar', [SolicitudController::class, 'restaurar'])->name('solicitudes.restaurar');
 });
 
 
