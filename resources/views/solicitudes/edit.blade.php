@@ -61,6 +61,15 @@
                             <label class="form-label">Apellidos *</label>
                             <input type="text" class="form-control" name="apellidos" value="{{ old('apellidos', $solicitud->persona->ApellidosPersona) }}" maxlength="100" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')">
                         </div>
+
+
+                        <div class="col-md-3">
+    <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento *</label>
+    <input type="date" class="form-control" name="fecha_nacimiento" 
+           {{-- Obtenemos la fecha de la BD o la anterior si falló la validación --}}
+           value="{{ old('fecha_nacimiento', $solicitud->persona->FechaNacPersona ? \Carbon\Carbon::parse($solicitud->persona->FechaNacPersona)->format('Y-m-d') : '') }}" 
+           required max="{{ date('Y-m-d') }}">
+</div>
                         <div class="col-md-4">
                             <label class="form-label">Teléfono *</label>
                             <input type="tel" class="form-control" name="telefono" value="{{ old('telefono', $solicitud->persona->TelefonoPersona) }}" maxlength="14" oninput="this.value = this.value.replace(/[^0-9\-\+\s\(\)]/g, '')">

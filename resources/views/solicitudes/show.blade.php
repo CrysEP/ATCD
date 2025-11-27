@@ -145,6 +145,16 @@
                     @endif
                 </div>
             </div>
+
+
+
+            <div class="d-flex gap-2">
+    {{-- BOTÓN PDF (NUEVO) --}}
+    <a href="{{ route('solicitudes.pdf', $solicitud->CodSolicitud) }}" class="btn btn-danger" target="_blank">
+        <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+    </a>
+    
+</div>
         </div>
 
         {{-- Columna Derecha: Correspondencia y Acciones --}}
@@ -171,7 +181,10 @@
 
                     <ul class="list-group list-group-flush mb-3">
                         <li class="list-group-item px-0"><strong>Nro. Oficio:</strong> {{ $solicitud->correspondencia->Nro_Oficio ?? 'N/A' }}</li>
+                        <li class="list-group-item px-0"><strong>Sector:</strong> {{ $solicitud->correspondencia->Sector ?? 'N/A' }}</li>
                         <li class="list-group-item px-0"><strong>Gerencia/Jefatura:</strong> {{ $solicitud->correspondencia->Gerencia_Jefatura ?? 'N/A' }}</li>
+                        <li class="list-group-item px-0"><strong>Observación:</strong><br><span class="text-muted small" style="white-space: pre-wrap;">{{ $solicitud->correspondencia->Observacion ?? 'N/A' }}</span></li>
+                     
                         <li class="list-group-item px-0"><strong>Tipo de Solicitud:</strong> <span class="badge bg-info text-dark">{{ $solicitud->TipoSolicitudPlanilla }}</span></li>
 
                         {{-- Visualización de la Clasificación --}}
@@ -216,7 +229,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="observacion" class="form-label">Observación (se añadirá al historial):</label>
+                            <label for="observacion" class="form-label">Instrucción Presidencia:</label>
                             <textarea name="observacion" id="observacion" rows="3" class="form-control" placeholder="Ej: Aprobado por presidencia, remitir a..."></textarea>
                         </div>
 
@@ -263,10 +276,12 @@
 
                         <div class="mb-3">
                 <label for="Gerencia_Jefatura" class="form-label">Gerencia / Jefatura:</label>
-                <input type="text" class="form-control" id="Gerencia_Jefatura" name="Gerencia_Jefatura" 
-                placeholder="Ej: Enviado a Presidencia"
-           value="{{ $solicitud->correspondencia->Gerencia_Jefatura }}">
-                        </div>
+                <input type="text" class="form-control" id="Gerencia_Jefatura" name="Gerencia_Jefatura" placeholder="Ej: Enviado a Presidencia" value="{{ $solicitud->correspondencia->Gerencia_Jefatura }}"></div>
+
+
+                        <div class="mb-3">
+    <label for="Sector" class="form-label">Sector:</label>
+    <input type="text" class="form-control" id="Sector" name="Sector" placeholder="Ej: Barrio Obrero" value="{{ $solicitud->correspondencia->Sector }}" maxlength="100"></div>
 
                         <div class="mb-3">
                             <label for="InstruccionPresidencia" class="form-label">Instrucciones de Presidencia:</label>

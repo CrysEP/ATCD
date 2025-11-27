@@ -96,6 +96,23 @@
                         <input type="text" class="form-control" id="search" name="search" placeholder="Cédula, Nro. UAC, palabra clave...">
                     </div>
                     
+
+                    <div class="mb-3">
+    <label class="form-label fw-bold text-primary small">Rango de Fechas</label>
+    
+    <div class="mb-2">
+        <label for="fecha_desde" class="form-label small text-muted">Desde:</label>
+        <input type="date" class="form-control form-control-sm" id="fecha_desde" name="fecha_desde" 
+               value="{{ request('fecha_desde') }}">
+    </div>
+    
+    <div class="mb-2">
+        <label for="fecha_hasta" class="form-label small text-muted">Hasta:</label>
+        <input type="date" class="form-control form-control-sm" id="fecha_hasta" name="fecha_hasta" 
+               value="{{ request('fecha_hasta') }}">
+    </div>
+</div>
+
                     <div class="mb-3">
                         <label for="urgencia" class="form-label">Urgencia</label>
                         <select name="urgencia" id="urgencia" class="form-select">

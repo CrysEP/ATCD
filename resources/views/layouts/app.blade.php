@@ -25,13 +25,13 @@
                     <ul class="navbar-nav me-auto">
                         @auth
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('dashboard') }}">Solicitudes activas</a>
+                                <a class="nav-link" href="{{ route('dashboard') }}">Solicitudes Activas</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('solicitudes.create') }}">Nueva Solicitud</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('solicitudes.history') }}">Solicitudes procesadas</a>
+                                <a class="nav-link" href="{{ route('solicitudes.history') }}">Solicitudes Procesadas</a>
                             </li>
 
                             <li class="nav-item">

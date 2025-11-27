@@ -67,18 +67,36 @@
                         </div>
                         <div class="col-md-4">
                             <label for="apellidos" class="form-label">Apellidos *</label>
-                            <input type="text" class="form-control" id="apellidos" name="apellidos" value="{{ old('apellidos') }}" required title="Ingrese apellidos" maxlength="50" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')" placeholder="Molina Canto">
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" value="{{ old('apellidos') }}" required title="Ingrese apellidos" maxlength="50" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')" placeholder="Ej: Molina Canto">
                         </div>
+
+<div class="col-md-3">
+    <label for="sexo" class="form-label">Género *</label>
+    <select class="form-select" id="sexo" name="sexo" required>
+        <option value="" disabled selected>-- Seleccione --</option>
+        <option value="M" @selected(old('sexo') == 'M')>Masculino</option>
+        <option value="F" @selected(old('sexo') == 'F')>Femenino</option>
+    </select>
+</div>
+
+
+<div class="col-md-3">
+    <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento *</label>
+    <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" 
+           value="{{ old('fecha_nacimiento') }}" required 
+           max="{{ date('Y-m-d') }}"> {{-- Evita fechas futuras --}}
+</div>
+
 
                         <div class="col-md-4">
                             <label for="telefono" class="form-label">Teléfono *</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono" value="{{ old('telefono') }}" required title="Introduce un número válido de 11 dígitos. Ej: 04141234567 o 02121234567" maxlength="11" oninput="this.value = this.value.replace(/[^0-9\-\+\s\(\)]/g, '')">
+                            <input type="tel" class="form-control" id="telefono" name="telefono" value="{{ old('telefono') }}" required title="Introduce un número válido de 11 dígitos. Ej: 04141234567 o 02121234567" maxlength="11" oninput="this.value = this.value.replace(/[^0-9\-\+\s\(\)]/g, '')" placeholder=" Ej: 04141234567 o 02121234567">
                         </div>
                         <div class="col-md-8">
                             <label for="email" class="form-label">Correo Electrónico *</label>
                             <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required title="Ejemplo correo@gmail.com, correo@outlook.com" maxlength="100" placeholder="Ej: a@gmail.com" pattern=".+@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|live\.com)" {{-- Patrón para validar dominios específicos --}}
            pattern=".+@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|live\.com)"
-           {{-- Título que aparece si el patrón falla --}}
+           {{-- Título que aparece si el patrón falla xd--}}
            title="Solo se permiten correos @gmail.com, @outlook.com, @hotmail.com, @yahoo.com o @live.com"
            {{-- Validación básica del navegador para el @ --}}
            oninvalid="this.setCustomValidity('Incluye un signo &quot;@&quot; en la dirección de correo. Falta un símbolo &quot;@&quot;.')"

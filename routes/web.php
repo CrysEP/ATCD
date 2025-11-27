@@ -46,6 +46,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/solicitudes/{id}/anular', [SolicitudController::class, 'anular'])->name('solicitudes.anular');
 
     Route::put('/solicitudes/{id}/restaurar', [SolicitudController::class, 'restaurar'])->name('solicitudes.restaurar');
+
+    Route::get('/solicitudes/{id}/pdf', [SolicitudController::class, 'generarPDF'])->name('solicitudes.pdf');
 });
 
 

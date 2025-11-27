@@ -15,14 +15,13 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 
 class SolicitudController extends Controller
 {
-    /**
-     * Muestra el Dashboard con las solicitudes activas.
-     */
+    /** Muestra el Dashboard con las solicitudes activas **/
     public function index(Request $request)
     {
         $query = Solicitud::query();
@@ -46,6 +45,17 @@ class SolicitudController extends Controller
                 $q->where('CodMunicipio', $request->municipio);
             });
         }
+
+
+        // Rango por fecha
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('FechaSolicitud', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('FechaSolicitud', '<=', $request->fecha_hasta);
+        }
+
+
         
         // --- Búsqueda ---
         if ($request->filled('search')) {
@@ -142,75 +152,67 @@ $categorias = [
      * Almacena una nueva solicitud en la base de datos.
      * Este es el flujo de trabajo principal.
      */
-    public function store(Request $request)
+public function store(Request $request)
     {
-
+        // 1. Definir TODAS las reglas en un solo arreglo
         $reglas = [
-        // ... tus otras reglas ...
-        
-        'email' => [
-            'nullable', 
-            'email', 
-            'max:200', 
-            // AQUÍ RESTRINGIMOS LOS DOMINIOS
-            'ends_with:@gmail.com,@outlook.com,@hotmail.com,@yahoo.com,@live.com' 
-        ],
-        
-        // ... tus otras reglas ...
-    ];
-
-    $mensajes = [
-        // ... tus otros mensajes ...
-
-        // Mensaje cuando falta el "@" o el formato está mal
-        'email.email' => 'El correo electrónico no es válido. Asegúrate de incluir el "@" y un dominio.',
-        
-        // Mensaje cuando el dominio no es de los permitidos
-        'email.ends_with' => 'Solo se aceptan correos de: Gmail, Outlook, Hotmail, Yahoo o Live.',
-    ];
-
-    $validatedData = $request->validate($reglas, $mensajes);
-
-
-        
-        // --- 1. Validación (Añadir reglas según sea necesario) ---
-        $validatedData = $request->validate([
+            // Datos Personales
             'tipo_cedula' => ['required', 'string', 'max:2', Rule::in(['V-', 'E-', 'J-', 'P-', 'G-'])],
             'cedula' => 'required|string|max:20|regex:/^[0-9]+$/',
             'nombres' => 'required|string|max:100|regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/',
             'apellidos' => 'required|string|max:100|regex:/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/',
             'telefono' => 'required|string|max:15|regex:/^[0-9\-\+\s\(\)]+$/',
+            'email' => [
+                'nullable', 
+                'email', 
+                'max:200', 
+                'ends_with:@gmail.com,@outlook.com,@hotmail.com,@yahoo.com,@live.com'
+            ],
+            'sexo' => ['required', 'string', Rule::in(['M', 'F'])],
+            'fecha_nacimiento' => 'required|date|before:tomorrow',
+            
+            // Ubicación
             'parroquia_id' => 'required|integer', 
-            'email' => 'nullable|email|max:300|email:filter', 
             
+            // Datos de la Solicitud
             'nro_uac' => 'nullable|string|max:50|unique:solicitud,Nro_UAC',
-            'tipo_solicitud_planilla' => 'required|string', // Enum
+            'tipo_solicitud_planilla' => 'required|string',
             'descripcion' => 'required|string',
-            'tipo_solicitante' => 'required|string', // Enum
-            'nivel_urgencia' => 'required|string', // Enum
-            
+            'tipo_solicitante' => 'required|string',
+            'nivel_urgencia' => 'required|string',
             'instruccion_presidencia' => 'nullable|string',
-
-            'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240', // max 10MB, por ahora o.o
-            'fecha_atencion' => 'required|date',  //Esta quedó como la fecha de creación de la planilla en físico
-            'fecha_solicitud' => 'required|date', //Esta quedó como la fecha de atención del formato en físico, creo
-
-            'tipo_ente' => 'required|integer|exists:tipo_ente,CodTipoEnte',
-
-            'categoria_solicitud' => 'required|string',
-            'detalle_solicitud' => 'required|string'
+            'observacion' => 'nullable|string', // Validar observación opcional
             
-    
-    
-    ]);
+            // Fechas
+            'fecha_atencion' => 'required|date',
+            'fecha_solicitud' => 'required|date',
 
-        // Iniciar transacción de base de datos
+            // Clasificación
+            'tipo_ente' => 'required|integer|exists:tipo_ente,CodTipoEnte',
+            'categoria_solicitud' => 'required|string',
+            'detalle_solicitud' => 'required|string',
+
+            // Archivos
+            'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240',
+        ];
+
+        // 2. Definir mensajes personalizados
+        $mensajes = [
+            'email.email' => 'El correo electrónico no es válido. Asegúrate de incluir el "@" y un dominio.',
+            'email.ends_with' => 'Solo se aceptan correos de: Gmail, Outlook, Hotmail, Yahoo o Live.',
+            'fecha_nacimiento.before' => 'La fecha de nacimiento no puede ser futura.',
+        ];
+
+        // 3. Ejecutar UNA SOLA validación
+        $validatedData = $request->validate($reglas, $mensajes);
+
+        // Iniciar transacción
         DB::beginTransaction();
 
         try {
-
             $cedulaCompleta = $validatedData['tipo_cedula'] . $validatedData['cedula'];
-            // --- 2. Gestionar Persona (Buscar o Crear) ---
+            
+            // --- 2. Gestionar Persona ---
             $persona = Persona::updateOrCreate(
                 ['CedulaPersona' => $cedulaCompleta],
                 [
@@ -219,9 +221,8 @@ $categorias = [
                     'TelefonoPersona' => $validatedData['telefono'],
                     'ParroquiaPersona_FK' => $validatedData['parroquia_id'],
                     'CorreoElectronicoPersona' => $validatedData['email'] ?? '',
-                    'FechaNacPersona' => $request->fecha_nacimiento ?? now(), // Asumir default
-                    'SexoPersona' => $request->sexo ?? 'N', // Asumir default
-                    
+                    'FechaNacPersona' => $validatedData['fecha_nacimiento'], // Ahora sí existe esta clave
+                    'SexoPersona' => $validatedData['sexo'],
                 ]
             );
 
@@ -235,56 +236,41 @@ $categorias = [
                 'NivelUrgencia' => $validatedData['nivel_urgencia'],
       
                 'AnexaDocumentos' => $request->hasFile('archivos'),
-                'CantidadDocumentosOriginal' => 0, // Ajustar si es necesario, si no pues miau
-                'CantidadDocumentoCopia' => 0, // Ajustar si es necesario
-                'CantidadPaginasAnexo' => 0, // Ajustar si es necesario
+                'CantidadDocumentosOriginal' => 0,
+                'CantidadDocumentoCopia' => 0,
+                'CantidadPaginasAnexo' => 0,
                 'CedulaPersona_FK' => $persona->CedulaPersona,
                 'Nro_UAC' => $validatedData['nro_uac'],
-                // 'CodigoInterno_FK' => $correspondencia->CodigoInterno,
                 'Funcionario_FK' => auth()->user()->funcionarioData->CodFuncionario,
-                'TipoSolicitud_FK' => $request->tipo_solicitud_fk ?? null, // Ajustar
+                'TipoSolicitud_FK' => null, // Se actualiza más abajo
             ]);
 
-            
-            // --- 4. Crear Relación de Correspondencia (Vínculo al Status) ---
-            // El estado inicial siempre es 'Pendiente' (ID 1, según tu seeder)
-           // $codigoInterno = 'CI-' . date('Ymd-His') . '-' . Str::random(4); //El que sirve
-
-
-            // 1. Buscar el Tipo de Ente seleccionado
-    $ente = TipoEnte::findOrFail($validatedData['tipo_ente']);
-
-    // 2. Incrementar el contador de ese ente (ej: de 176 pasa a 177)
-    $ente->increment('ContadorActual');
-
-    // 3. Generar el código (Ej: CO + - + 00177)
-    // str_pad rellena con ceros a la izquierda hasta llegar a 5 dígitos
-    $codigoInterno = $ente->PrefijoCodigo . '-' . str_pad($ente->ContadorActual, 5, '0', STR_PAD_LEFT);
+            // --- 4. Crear Relación de Correspondencia ---
+            $ente = TipoEnte::findOrFail($validatedData['tipo_ente']);
+            $ente->increment('ContadorActual');
+            $codigoInterno = $ente->PrefijoCodigo . '-' . str_pad($ente->ContadorActual, 5, '0', STR_PAD_LEFT);
 
             $correspondencia = RelacionCorrespondencia::create([
                 'CodigoInterno' => $codigoInterno,
                 'Solicitud_FK' => $solicitud->CodSolicitud,
                 'TipoEnte_FK' => $ente->CodTipoEnte,
-                'Nro_Oficio' => $request->nro_oficio ?? 'N/A',
+                'Nro_Oficio' => $request->nro_oficio ?? 'N/A', // Usamos request directo si no está en rules o validatedData
                 'FechaOficioEntrega' => now(),
                 'FechaRecibido' => now(),
                 'Municipio_FK' => $persona->parroquia->Municipio_FK,
-                'Ente' => 0, // Ajustar según lógica
+                'Ente' => 0,
                 'Sector' => $request->sector ?? 'N/A',
-                'Descripcion' => $validatedData['descripcion'], // Replicar descripción
+                'Descripcion' => $validatedData['descripcion'],
                 'InstruccionPresidencia' => $validatedData['instruccion_presidencia'] ?? '',
-                'Observacion' => '',
+                'Observacion' => $validatedData['observacion'] ?? '',
                 'Gerencia_Jefatura' => '',
-                'StatusSolicitud_FK' => 1, // 1 = Pendiente (del seeder o.o)
+                'StatusSolicitud_FK' => 1,
             ]);
 
             // --- 5. Manejar Archivos Adjuntos ---
             if ($request->hasFile('archivos')) {
                 foreach ($request->file('archivos') as $file) {
-                    // Almacenar en 'storage/app/public/solicitudes'
                     $path = $file->store('solicitudes', 'public');
-
-                    // Crear registro en la nueva tabla 'archivos_solicitud'
                     $solicitud->archivos()->create([
                         'nombre_original' => $file->getClientOriginalName(),
                         'ruta_archivo' => $path,
@@ -294,44 +280,41 @@ $categorias = [
                 }
             }
             
+            // --- 6. Clasificación Dinámica (Lógica Simplificada) ---
+            // Como acordamos eliminar la complejidad de la clasificación,
+            // aquí mantenemos la estructura básica necesaria por la BD
+            // pero sin llenarla con datos complejos si no se requiere.
+            // Si decides reincorporar la lógica de inserts específicos, iría aquí.
+            // Por ahora, creamos el vínculo básico para que no falle la FK.
 
-$cat = $request->categoria_solicitud;
+            $cat = $request->categoria_solicitud;
             $det = $request->detalle_solicitud;
-            $tipoId = null; // Guardará el ID de la tabla específica
-
-            // Variables para las FKs
+            
             $fk_servicio = null;
             $fk_infra = null;
             $fk_fortalecimiento = null;
             $fk_apoyo_inst = null;
             $fk_apoyo_ciud = null;
 
-            // Insertar en la tabla específica según la categoría
             if ($cat == 'servicio_publico') {
-                // Detectar si es alumbrado (el único de TendidosElectricos) o Hidraulico
                 $columna = ($det == 'Alumbrado') ? 'TendidosElectricos' : 'Hidraulicos';
                 $id = DB::table('servicio_publico')->insertGetId([$columna => $det]);
                 $fk_servicio = $id;
-            } 
-            elseif ($cat == 'infraestructura_vial') {
+            } elseif ($cat == 'infraestructura_vial') {
                 $id = DB::table('infraestructura_vial')->insertGetId(['Vialidad' => $det]);
                 $fk_infra = $id;
-            }
-            elseif ($cat == 'fortalecimiento_instituciones') {
+            } elseif ($cat == 'fortalecimiento_instituciones') {
                 $id = DB::table('fortalecimiento_instituciones')->insertGetId(['Edificaciones' => $det]);
                 $fk_fortalecimiento = $id;
-            }
-            elseif ($cat == 'apoyo_instituciones') {
+            } elseif ($cat == 'apoyo_instituciones') {
                 $id = DB::table('apoyo_instituciones')->insertGetId(['EquipoMateriales' => $det]);
                 $fk_apoyo_inst = $id;
-            }
-            elseif ($cat == 'apoyo_ciudadania') {
+            } elseif ($cat == 'apoyo_ciudadania') {
                 $id = DB::table('apoyo_ciudadania')->insertGetId(['ApoyoCiudadania' => $det]);
                 $fk_apoyo_ciud = $id;
             }
 
-            // Crear registro en la tabla intermedia 'tipo_solicitud'
-            $codTipoSolicitud = 'tsl_' . uniqid();// Generamos un ID único temporal
+            $codTipoSolicitud = 'tsl_' . uniqid();
             
             DB::table('tipo_solicitud')->insert([
                 'CodTipoSolicitud' => $codTipoSolicitud,
@@ -342,20 +325,13 @@ $cat = $request->categoria_solicitud;
                 'ApoyoCiudadania_FK' => $fk_apoyo_ciud,
             ]);
 
-            // Actualizar la Solicitud principal con este vínculo
             $solicitud->update(['TipoSolicitud_FK' => $codTipoSolicitud]);
 
-
-
-            // Si todo fue exitoso, confirmar la transacción
             DB::commit();
-
             return redirect()->route('dashboard')->with('success', 'Solicitud registrada exitosamente.');
 
         } catch (\Exception $e) {
-            // Si algo falla, revertir la transacción
             DB::rollBack();
-            // Log::error($e->getMessage()); // Buena práctica
             return back()->withInput()->with('error', 'Error al registrar la solicitud: ' . $e->getMessage());
         }
     }
@@ -483,6 +459,16 @@ $cat = $request->categoria_solicitud;
             $query->where('NivelUrgencia', $request->urgencia);
         }
 
+
+        // --- FILTRO POR FECHA PARA HISTORIAL ---
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('FechaSolicitud', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('FechaSolicitud', '<=', $request->fecha_hasta);
+        }
+
+
         // Búsqueda (Cédula, UAC, Descripción, Nombre...)
         if ($request->filled('search')) {
             $search = $request->search;
@@ -503,7 +489,7 @@ $cat = $request->categoria_solicitud;
 
         // 3. Ejecutar consulta
         $solicitudes = $query->with(['persona.parroquia.municipio', 'correspondencia.status'])
-                             ->orderBy('FechaAtención', 'desc')
+                             ->orderBy('FechaSolicitud', 'desc')
                              ->paginate(20);
 
         return view('solicitudes.history', compact('solicitudes'));
@@ -537,7 +523,8 @@ public function updateFlujo(Request $request, $id)
             'TipoSolicitudPlanilla' => 'required|string',
             'categoria_solicitud' => 'required|string',
             'detalle_solicitud' => 'required|string',
-            'Gerencia_Jefatura' => 'nullable|string|max:255'
+            'Gerencia_Jefatura' => 'nullable|string|max:255',
+            'Sector' => 'nullable|string|max:300'
         ]);
 
         try {
@@ -548,7 +535,8 @@ public function updateFlujo(Request $request, $id)
                 'Nro_Oficio' => $validatedData['Nro_Oficio'],
                 'InstruccionPresidencia' => $validatedData['InstruccionPresidencia'] ?? '',
                 'Observacion' => $validatedData['Observacion'] ?? '',
-                'Gerencia_Jefatura' => $validatedData['Gerencia_Jefatura'] ?? ''
+                'Gerencia_Jefatura' => $validatedData['Gerencia_Jefatura'] ?? '',
+                'Sector' => $validatedData['Sector'] ?? 'N/A'
             ]);
 
             // 3. Actualizar el Tipo de Solicitud en la tabla PADRE (solicitud)
@@ -696,6 +684,7 @@ $reglas = [
         
         'fecha_solicitud' => 'required|date', // Transcripción Paso 1
         'fecha_atencion' => 'required|date',  // Transcripción Paso 2
+        'fecha_nacimiento' => 'required|date|before:tomorrow',
     ]);
 
     DB::beginTransaction();
@@ -714,6 +703,8 @@ $reglas = [
             'TelefonoPersona' => $validatedData['telefono'],
             'ParroquiaPersona_FK' => $validatedData['parroquia_id'],
             'CorreoElectronicoPersona' => $validatedData['email'] ?? '',
+            'SexoPersona' => $request->sexo ?? $solicitud->persona->SexoPersona,
+            'FechaNacPersona' => $validatedData['fecha_nacimiento'],
         ]);
 
         // 3. Actualizar Solicitud
@@ -805,6 +796,26 @@ public function anuladas(Request $request)
         } catch (\Exception $e) {
             return back()->with('error', 'Error al restaurar: ' . $e->getMessage());
         }
+    }
+
+
+
+    public function generarPDF($id)
+    {
+        $solicitud = Solicitud::with([
+            'persona.parroquia.municipio',
+            'correspondencia',
+            'funcionario.persona' // Para la firma del funcionario
+        ])->findOrFail($id);
+
+        // Renderizar el PDF usando una vista específica
+        $pdf = Pdf::loadView('solicitudes.pdf', compact('solicitud'));
+        
+        // Configuración opcional de papel (Carta es lo estándar en Vzla)
+        $pdf->setPaper('letter', 'portrait');
+
+        // Descargar o mostrar en el navegador (stream para ver, download para bajar)
+        return $pdf->stream('Solicitud-UAC-' . ($solicitud->Nro_UAC ?? $solicitud->CodSolicitud) . '.pdf');
     }
 
 }

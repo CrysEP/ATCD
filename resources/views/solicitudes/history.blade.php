@@ -86,19 +86,39 @@
                                placeholder="Cédula, Código, Nombre...">
                     </div>
                     
+
                     <div class="mb-3">
-                        <label for="urgencia" class="form-label">Urgencia Original</label>
-                        <select name="urgencia" id="urgencia" class="form-select">
-                            <option value="">Todas</option>
-                            <option value="Alto" @selected(request('urgencia') == 'Alto')>Alto</option>
-                            <option value="Medio" @selected(request('urgencia') == 'Medio')>Medio</option>
-                            <option value="Bajo" @selected(request('urgencia') == 'Bajo')>Bajo</option>
-                        </select>
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
-                        <a href="{{ route('solicitudes.history') }}" class="btn btn-outline-secondary">Limpiar</a>
+    <label class="form-label fw-bold text-primary small">Rango de Fechas</label>
+    <div class="mb-2">
+        <label for="fecha_desde" class="form-label small text-muted">Desde:</label>
+        <input type="date" class="form-control form-control-sm" name="fecha_desde" value="{{ request('fecha_desde') }}">
+    </div>
+    <div class="mb-2">
+        <label for="fecha_hasta" class="form-label small text-muted">Hasta:</label>
+        <input type="date" class="form-control form-control-sm" name="fecha_hasta" value="{{ request('fecha_hasta') }}">
+    </div>
+</div>
+
+
+                            <div class="mb-3">
+                                <label for="urgencia" class="form-label">Urgencia</label>
+                                <select name="urgencia" id="urgencia" class="form-select">
+                                    <option value="">Todas</option>
+                                    <option value="Alto" @selected(request('urgencia') == 'Alto')>Alto</option>
+                                    <option value="Medio" @selected(request('urgencia') == 'Medio')>Medio</option>
+                                    <option value="Bajo" @selected(request('urgencia') == 'Bajo')>Bajo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                                <a href="{{ route('solicitudes.history') }}" class="btn btn-outline-secondary">Limpiar</a>
+                            </div>
+
+                            <div class="d-grid gap-2">   {{-- - --}}
+                                <a href="{{ route('solicitudes.pdf', $solicitud->CodSolicitud) }}" class="btn btn-danger" target="_blank">
+                                <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                                </a>
                     </div>
                 </form>
             </div>
