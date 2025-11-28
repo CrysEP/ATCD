@@ -53,6 +53,11 @@
             font-weight: bold;
             font-size: 10px;
         }
+
+        .label-detalle {
+            font-weight: bold;
+            font-size: 10px;
+        }
         .content {
             font-size: 12px;
         }
@@ -184,7 +189,7 @@
         </tr>
         <tr>
             <td colspan="4" style="height: 200px;">
-                <span class="label">DETALLE DEL PLANTEAMIENTO REALIZADO:</span><br><br>
+                <span class="label-detalle">DETALLE DEL PLANTEAMIENTO REALIZADO:</span><br><br>
                 <span class="content" style="text-align: justify; display: block;">
                     {{ $solicitud->DescripcionSolicitud }}
                 </span>
