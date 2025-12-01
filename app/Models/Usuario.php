@@ -9,9 +9,10 @@ class Usuario extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'usuario';
+    // Apunta correctamente a la tabla en plural
+    protected $table = 'usuarios';
     protected $primaryKey = 'CodUsuario';
-    public $timestamps = false; // La tabla no tiene created_at/updated_at
+    public $timestamps = false; 
 
     protected $fillable = [
         'NombreUsuario', 
@@ -27,26 +28,27 @@ class Usuario extends Authenticatable
     
     /**
      * Sobrescribe el método para obtener la contraseña de autenticación.
-     * Apunta a 'ContraseniaUsuario' en lugar de 'password'.
      */
     public function getAuthPassword()
     {
+        // CORREGIDO: Se eliminó la línea "muerta" que sobraba aquí.
         return $this->ContraseniaUsuario;
-        return $this->belongsTo(Persona::class, 'CedulaPersonaUsuario_FK', 'CedulaPersona');
     }
 
     /**
-     * Relación: Un usuario (que es un funcionario/persona) tiene datos de persona.
+     * Relación: Un usuario pertenece a una Persona.
      */
     public function persona()
     {
         return $this->belongsTo(Persona::class, 'CedulaPersonaUsuario_FK', 'CedulaPersona');
     }
 
+    /**
+     * Relación: Un usuario puede tener datos de Funcionario (vinculados por la Cédula).
+     */
     public function funcionarioData()
     {
-        // 'CedulaPersona_FK' -> Columna en la tabla 'funcionario'
-        // 'CedulaPersonaUsuario_FK' -> Columna en la tabla 'usuario' (este modelo)
+        // Vinculamos la tabla 'funcionarios' con la tabla 'usuarios' a través de la Cédula
         return $this->hasOne(Funcionario::class, 'CedulaPersona_FK', 'CedulaPersonaUsuario_FK');
     }
 }

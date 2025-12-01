@@ -5,8 +5,7 @@
     <title>Planilla de Solicitud</title>
     <style>
         body {
-            font-family: 'Times New Roman', Times, serif;
-            /* font-family: Arial, sans-serif; */
+            font-family: Arial, sans-serif;
             font-size: 12px;
             margin: 0;
             padding: 0;
@@ -15,10 +14,12 @@
             width: 100%;
             margin-bottom: 10px;
             border-bottom: 2px solid #000;
+            padding-bottom: 5px;
         }
         .logo {
-            width: 180px; /* Ajusta según tus imágenes */
-            height: auto;
+            width: 195px; 
+            height: 70px;
+            object-fit: contain;
         }
         .titulo {
             text-align: center;
@@ -28,7 +29,7 @@
         }
         .subtitulo {
             text-align: center;
-            font-size: 15px;
+            font-size: 12px;
             margin-top: 5px;
         }
         
@@ -44,7 +45,7 @@
             vertical-align: top;
         }
         .section-header {
-            background-color: #d0d0d0; /* Gris claro como en la planilla */
+            background-color: #fff; /* Gris claro */
             font-weight: bold;
             text-align: center;
             text-transform: uppercase;
@@ -53,13 +54,8 @@
             font-weight: bold;
             font-size: 10px;
         }
-
-        .label-detalle {
-            font-weight: bold;
-            font-size: 10px;
-        }
         .content {
-            font-size: 12px;
+            font-size: 11px;
         }
         .check-box {
             display: inline-block;
@@ -85,18 +81,23 @@
 </head>
 <body>
 
-    {{-- ENCABEZADO CON LOGOS --}}
     <table class="header-table">
         <tr>
-            <td style="width: 20%; border: none; text-align: left;">
-                <img src="{{ public_path('images/logo_corpointa.png') }}" class="logo" alt="Corpointa">
+          
+            <td style="width: 25%; border: none; text-align: left; vertical-align: middle;">
+                <img src="{{ public_path('images/Gobernación_logo.jpg') }}" class="logo" alt="Gobernación">
             </td>
-            <td style="width: 60%; border: none;">
+            
+            {{-- CENTRO: TÍTULOS --}}
+            <td style="width: 50%; border: none; vertical-align: middle;">
                 <div class="titulo">República Bolivariana de Venezuela</div>
                 <div class="titulo">Corpointa</div>
                 <div class="subtitulo">Formulario de Solicitud o Petición de Atención Ciudadana</div>
             </td>
-            <td style="width: 20%; border: none; text-align: right;">
+            
+            {{-- DERECHA: LOGO CORPOINTA (Movido aquí) --}}
+            <td style="width: 25%; border: none; text-align: right; vertical-align: middle;">
+                <img src="{{ public_path('images/logo_corpointa.png') }}" class="logo" alt="Corpointa">
             </td>
         </tr>
     </table>
@@ -131,7 +132,6 @@
             </td>
         </tr>
         <tr>
-            {{-- Modificado para incluir SEXO --}}
             <td colspan="2">
                 <span class="label">APELLIDOS Y NOMBRES:</span><br>
                 <span class="content">{{ strtoupper($solicitud->persona->NombreCompleto) }}</span>
@@ -146,7 +146,6 @@
             </td>
         </tr>
         <tr>
-            {{-- Modificado para incluir FECHA DE NACIMIENTO --}}
             <td colspan="1">
                 <span class="label">FECHA NACIMIENTO:</span><br>
                 <span class="content">
@@ -189,7 +188,7 @@
         </tr>
         <tr>
             <td colspan="4" style="height: 200px;">
-                <span class="label-detalle">DETALLE DEL PLANTEAMIENTO REALIZADO:</span><br><br>
+                <span class="label">DETALLE DEL PLANTEAMIENTO REALIZADO:</span><br><br>
                 <span class="content" style="text-align: justify; display: block;">
                     {{ $solicitud->DescripcionSolicitud }}
                 </span>

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArchivoSolicitud extends Model
 {
-    protected $table = 'archivos_solicitud';
+    protected $table = 'archivos_solicitudes';
     
     protected $fillable = [
         'solicitud_id',

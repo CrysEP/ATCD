@@ -6,17 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Municipio extends Model
 {
-    protected $table = 'municipio';
+    protected $table = 'municipios';
     protected $primaryKey = 'CodMunicipio';
     public $timestamps = false;
 
-    /**
-     * Relación: Un municipio pertenece a un estado.
-     */
-    public function estado()
-    {
-        return $this->belongsTo(Estado::class, 'Estado_FK', 'CodEstado');
-    }
 
 
 public function parroquias()

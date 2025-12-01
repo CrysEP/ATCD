@@ -9,7 +9,7 @@ class Solicitud extends Model
 {
     use HasFactory;
 
-    protected $table = 'solicitud';
+    protected $table = 'solicitudes';
     protected $primaryKey = 'CodSolicitud';
     public $timestamps = false; // La tabla no tiene created_at/updated_at
 

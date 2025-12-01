@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Funcionario extends Model
 {
-    protected $table = 'funcionario';
+    protected $table = 'funcionarios';
     protected $primaryKey = 'CodFuncionario';
     public $timestamps = false; // La tabla no tiene timestamps sdicjsdicefjei, por ahora o.o
+
+    public $incrementing = false; // Para códigos alfanuméricos
+    protected $keyType = 'string';
 
     protected $fillable = [
         'CargoFuncionario',
