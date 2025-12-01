@@ -108,6 +108,8 @@ class SolicitudController extends Controller
             'parroquia_id' => 'required|integer', 
             'email' => ['nullable', 'email', 'max:200', 'ends_with:@gmail.com,@outlook.com,@hotmail.com,@yahoo.com,@live.com'],
             'sexo' => ['required', 'string', Rule::in(['M', 'F'])],
+            'direccion_habitacion' => 'required|string',
+            'punto_referencia' => 'nullable|string',
             'fecha_nacimiento' => 'required|date|before:tomorrow',
             
             // --- CAMBIOS A PLURAL ---
@@ -165,6 +167,8 @@ class SolicitudController extends Controller
                 'CantidadDocumentosOriginal' => 0,
                 'CantidadDocumentoCopia' => 0,
                 'CantidadPaginasAnexo' => 0,
+                'DirecciónHabitación' => $validatedData['direccion_habitacion'],
+                'PuntoReferencia' => $validatedData['punto_referencia'],
                 'CedulaPersona_FK' => $persona->CedulaPersona,
                 'Nro_UAC' => $validatedData['nro_uac'],
                 'Funcionario_FK' => auth()->user()->funcionarioData->CodFuncionario,
@@ -460,6 +464,9 @@ class SolicitudController extends Controller
             'fecha_solicitud' => 'required|date',
             'fecha_atencion' => 'required|date',
             'fecha_nacimiento' => 'required|date|before:tomorrow',
+            'direccion_habitacion' => 'required|string',
+            'punto_referencia' => 'nullable|string',
+            'tipo_ente' => 'required|integer|exists:tipos_entes,CodTipoEnte',
         ]);
 
         DB::beginTransaction();
@@ -480,6 +487,8 @@ class SolicitudController extends Controller
 
             $solicitud->update([
                 'TipoSolicitudPlanilla' => $validatedData['tipo_solicitud_planilla'],
+                'DirecciónHabitación' => $validatedData['direccion_habitacion'],
+                'PuntoReferencia' => $validatedData['punto_referencia'],
                 'DescripcionSolicitud' => $validatedData['descripcion'],
                 'FechaSolicitud' => $validatedData['fecha_solicitud'],
                 'FechaAtención' => $validatedData['fecha_atencion'],
@@ -487,12 +496,14 @@ class SolicitudController extends Controller
                 'NivelUrgencia' => $validatedData['nivel_urgencia'],
                 'Nro_UAC' => $validatedData['nro_uac'],
                 'CedulaPersona_FK' => $cedulaCompleta, 
+
             ]);
 
             if ($solicitud->correspondencia) {
                 $solicitud->correspondencia->update([
                     'Descripcion' => $validatedData['descripcion'],
                     'Municipio_FK' => $solicitud->persona->parroquia->Municipio_FK,
+                    'TipoEnte_FK' => $validatedData['tipo_ente'],
                 ]);
             }
 
@@ -607,4 +618,6 @@ class SolicitudController extends Controller
         $archivo = \App\Models\ArchivoSolicitud::findOrFail($id);
         return Storage::disk('public')->download($archivo->ruta_archivo, $archivo->nombre_original);
     }
+
+    
 }

@@ -18,6 +18,7 @@ class RelacionCorrespondencia extends Model
         'FechaOficioEntrega',
         'FechaRecibido',
         'Municipio_FK',
+        'TipoEnte_FK',
         'Ente',
         'Sector',
         'Descripcion',

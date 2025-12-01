@@ -48,6 +48,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/solicitudes/{id}/restaurar', [SolicitudController::class, 'restaurar'])->name('solicitudes.restaurar');
 
     Route::get('/solicitudes/{id}/pdf', [SolicitudController::class, 'generarPDF'])->name('solicitudes.pdf');
+
+    Route::post('/solicitudes/exportar-zip', [SolicitudController::class, 'exportarZip'])->name('solicitudes.exportarZip');
 });
 
 

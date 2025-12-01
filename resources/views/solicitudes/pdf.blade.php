@@ -18,7 +18,7 @@
         }
         .logo {
             width: 195px; 
-            height: 70px;
+            height: 68px;
             object-fit: contain;
         }
         .titulo {
@@ -47,7 +47,7 @@
         .section-header {
             background-color: #fff; /* Gris claro */
             font-weight: bold;
-            text-align: center;
+            text-align: left;
             text-transform: uppercase;
         }
         .label {
@@ -161,33 +161,39 @@
                 <span class="content">{{ $solicitud->persona->CorreoElectronicoPersona }}</span>
             </td>
         </tr>
-        <tr>
+
+       <tr>
             <td colspan="4">
-                <span class="label">MUNICIPIO / PARROQUIA:</span><br>
+                <span class="label">DIRECCIÓN DE HABITACIÓN / MUNICIPIO / PARROQUIA:</span><br>
                 <span class="content">
+                    {{-- Mostramos la dirección detallada --}}
+                    {{ $solicitud->DirecciónHabitación }}.
+                    
+                    {{-- Mostramos el punto de referencia si existe --}}
+                    @if($solicitud->PuntoReferencia)
+                        <br><strong>Ref:</strong> {{ $solicitud->PuntoReferencia }}.
+                    @endif
+                    
+                    {{-- Mostramos la ubicación geográfica --}}
+                    <strong>Ubicación:</strong> 
                     Mcp. {{ $solicitud->persona->parroquia->municipio->NombreMunicipio }}, 
                     Pq. {{ $solicitud->persona->parroquia->NombreParroquia }}.
                 </span>
             </td>
         </tr>
-        <tr>
-            <td colspan="4" style="height: 40px; vertical-align: bottom;">
-                <span class="label">FIRMA DEL CIUDADANO ATENDIDO:</span>
-            </td>
-        </tr>
 
         {{-- SECCIÓN II: DATOS DE LA SOLICITUD --}}
         <tr>
-            <td colspan="4" class="section-header">II. DATOS DE LA SOLICITUD O PETICIÓN</td>
+            <td colspan="4" class="section-header">II. DATOS DE LA SOLICITUD, QUEJA O DENUNCIA</td>
         </tr>
         <tr>
             <td colspan="4">
-                <span class="label">TIPO DE PLANILLA:</span> {{ $solicitud->TipoSolicitudPlanilla }} <br>
-                <span class="label">ENTE / CATEGORÍA:</span> {{ $solicitud->correspondencia->tipoEnte->NombreEnte ?? 'N/A' }}
+                <span class="label">TIPO DE PLANILLA:</span> {{ $solicitud->TipoSolicitudPlanilla }}
+                <!-- <span class="label">ENTE / CATEGORÍA:</span> {{ $solicitud->correspondencia->tipoEnte->NombreEnte ?? 'N/A' }} -->
             </td>
         </tr>
         <tr>
-            <td colspan="4" style="height: 200px;">
+            <td colspan="4" style="height: 240px;">
                 <span class="label">DETALLE DEL PLANTEAMIENTO REALIZADO:</span><br><br>
                 <span class="content" style="text-align: justify; display: block;">
                     {{ $solicitud->DescripcionSolicitud }}
@@ -200,7 +206,6 @@
                 SI <div class="check-box">{{ $solicitud->AnexaDocumentos ? 'X' : '' }}</div>
                 NO <div class="check-box">{{ !$solicitud->AnexaDocumentos ? 'X' : '' }}</div>
                 &nbsp;&nbsp;&nbsp;
-                <span class="label">OBSERVACIONES:</span> {{ $solicitud->correspondencia->Observacion }}
             </td>
         </tr>
 
@@ -222,17 +227,39 @@
                 </span>
             </td>
         </tr>
-        <tr>
-            <td colspan="4">
+       <tr>
+            <td colspan="2">
                 <span class="label">ADSCRIPCIÓN:</span><br>
                 <span class="content">Oficina de Atención al Ciudadano - CORPOINTA</span>
             </td>
+            <td colspan="2">
+                <span class="label">FECHA Y HORA DE ATENCIÓN (RECEPCIÓN):</span><br>
+                <span class="content">
+                    {{-- Usa Carbon::parse por seguridad, aunque el modelo ya debería castearlo pero dsofijeowji--}}
+                    {{ $solicitud->FechaAtención ? \Carbon\Carbon::parse($solicitud->FechaAtención)->format('d/m/Y h:i A') : 'N/A' }}
+                </span>
+            </td>
+        </tr>
+
+        {{-- NUEVA SECCIÓN IV: FIRMAS --}}
+        <tr>
+            <td colspan="4" class="section-header">IV. FIRMAS</td>
         </tr>
         <tr>
-            <td colspan="2" style="height: 60px; vertical-align: bottom;">
-                <span class="label">FIRMA DEL RESPONSABLE:</span>
+            {{-- Firma del Ciudadano (Espacio más ancho) --}}
+            <td colspan="2" style="height: 80px; vertical-align: bottom; text-align: center;">
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto 5px auto;"></div>
+                <span class="label">FIRMA DEL CIUDADANO (SOLICITANTE)</span>
             </td>
-            <td colspan="2" style="height: 60px; vertical-align: bottom;">
+            
+            {{-- Firma del Funcionario --}}
+            <td colspan="1" style="height: 80px; vertical-align: bottom; text-align: center;">
+                <div style="border-top: 1px solid #000; width: 90%; margin: 0 auto 5px auto;"></div>
+                <span class="label">FIRMA DEL FUNCIONARIO</span>
+            </td>
+            
+            {{-- Sello --}}
+            <td colspan="1" style="height: 80px; vertical-align: top; text-align: left;">
                 <span class="label">SELLO DE RECIBIDO:</span>
             </td>
         </tr>

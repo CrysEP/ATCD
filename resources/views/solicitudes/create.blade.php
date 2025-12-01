@@ -103,6 +103,18 @@
            oninput="this.setCustomValidity('')">
                         </div>
 
+                        <div class="col-12">
+    <label for="direccion_habitacion" class="form-label">Dirección de Habitación *</label>
+    <textarea class="form-control" id="direccion_habitacion" name="direccion_habitacion" rows="2" 
+              placeholder="Av. Principal, Calle 5, Casa Nro 12..." required>{{ old('direccion_habitacion') }}</textarea>
+</div>
+
+<div class="col-12">
+    <label for="punto_referencia" class="form-label">Punto de Referencia (Opcional)</label>
+    <input type="text" class="form-control" id="punto_referencia" name="punto_referencia" 
+           value="{{ old('punto_referencia') }}" placeholder="Ej: Frente a la plaza Bolívar">
+</div>
+
                         <div class="col-md-6">
                             <label for="municipio_id" class="form-label">Municipio:</label>
                             <select class="form-select" id="municipio_id" name="municipio_id" required title="Seleccione un Municipio">
