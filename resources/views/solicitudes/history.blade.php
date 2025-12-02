@@ -123,7 +123,44 @@
                 </form>
             </div>
         </div>
+        <div class="card shadow-sm border-0 mt-3 position-sticky" style="top: 22rem;">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-zip"></i> Descarga Masiva</h5>
+        </div>
+        <div class="card-body">
+            <p class="small text-muted mb-2">
+                Descargue todas las planillas PDF (Mensual y semanal).
+            </p>
+
+            <form method="POST" action="{{ route('solicitudes.exportarZip') }}">
+                @csrf
+                
+                <div class="mb-2">
+                    <label for="fecha_desde_export" class="form-label small fw-bold">Desde:</label>
+                    <input type="date" class="form-control form-control-sm" 
+                           id="fecha_desde_export" name="fecha_desde_export" required
+                           value="{{ date('Y-m-d') }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="fecha_hasta_export" class="form-label small fw-bold">Hasta:</label>
+                    <input type="date" class="form-control form-control-sm" 
+                           id="fecha_hasta_export" name="fecha_hasta_export" required
+                           value="{{ date('Y-m-d') }}"> {{-- Por defecto: Hoy --}}
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-download"></i> Descargar ZIP
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
+    </div>
 </div>
+
+
+
 @endsection

@@ -620,4 +620,59 @@ class SolicitudController extends Controller
     }
 
     
+/** Genera un ZIP con los PDFs de las solicitudes procesadas en un rango de fechas. **/
+    public function exportarZip(Request $request)
+    {
+        $request->validate([
+            'fecha_desde_export' => 'required|date',
+            'fecha_hasta_export' => 'required|date|after_or_equal:fecha_desde_export',
+        ]);
+        // 1. Aumentar tiempo de ejecución (generar muchos PDFs toma tiempo)
+        set_time_limit(300); // 5 minutos
+
+        // 2. Buscar Solicitudes PROCESADAS (Igual que en el historial: != 1 y != 7)
+        // Usamos whereBetween para el rango de fechas (incluye las horas del día final)
+        $solicitudes = Solicitud::whereHas('correspondencia', function ($q) {
+                $q->where('StatusSolicitud_FK', '!=', 1)
+                  ->where('StatusSolicitud_FK', '!=', 7);
+            })
+            ->whereDate('FechaSolicitud', '>=', $request->fecha_desde_export)
+            ->whereDate('FechaSolicitud', '<=', $request->fecha_hasta_export)
+            ->with(['persona.parroquia.municipio', 'correspondencia.status', 'funcionario.persona'])
+            ->get();
+
+        if ($solicitudes->isEmpty()) {
+            return back()->with('error', 'No se encontraron solicitudes procesadas en ese rango de fechas.');
+        }
+
+        // 3. Crear el archivo ZIP temporal
+        $zipName = 'reporte-mensual-solicitudes-corpointa-' . now()->format('Ymd-His') . '.zip';
+        $zipPath = storage_path('app/public/' . $zipName);
+        
+        $zip = new \ZipArchive;
+        if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+            
+            foreach ($solicitudes as $solicitud) {
+                // Generar PDF en memoria (vista pdf.blade.php)
+                $pdf = Pdf::loadView('solicitudes.pdf', compact('solicitud'));
+                $pdf->setPaper('letter', 'portrait');
+                $content = $pdf->output();
+
+                // Nombre del archivo dentro del ZIP
+                // $codigoLimpio = preg_replace('/[^A-Za-z0-9\-]/', '', ($solicitud->Nro_UAC ?? 'Sin-UAC'));
+                $nombreArchivo = 'Solicitud-' . ($solicitud->Nro_UAC ?? $solicitud->CodSolicitud) . '.pdf';
+                
+                // Agregar al ZIP
+                $zip->addFromString($nombreArchivo, $content);
+            }
+            
+            $zip->close();
+        } else {
+            return back()->with('error', 'No se pudo crear el archivo ZIP.');
+        }
+
+        // 4. Descargar y luego eliminar el temporal
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
 }
