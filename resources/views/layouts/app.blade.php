@@ -39,6 +39,12 @@
                                     <i class="bi bi-trash3"></i> Anuladas
                                 </a>
                             </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('estadisticas.index') }}">
+                                    <i class="bi bi-graph-up"></i> Estadísticas
+                                </a>
+                            </li>
                         @endauth
                     </ul>
 

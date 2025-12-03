@@ -89,7 +89,7 @@
                             <label class="form-label">Teléfono *</label>
                             <input type="tel" class="form-control" name="telefono" 
                                    value="{{ old('telefono', $solicitud->persona->TelefonoPersona) }}" 
-                                   maxlength="15" oninput="this.value = this.value.replace(/[^0-9\-\+\s\(\)]/g, '')">
+                                   maxlength="11" oninput="this.value = this.value.replace(/[^0-9\-\+\s\(\)]/g, '')">
                         </div>
                         
                         <div class="col-md-3">

@@ -73,9 +73,17 @@
             bottom: 0;
             width: 100%;
             text-align: center;
-            font-size: 9px;
-            border-top: 1px solid #ccc;
+            font-size: 10px;
+            /* border-top: 1px solid #ccc; */
             padding-top: 5px;
+        }
+
+        .footer-img {
+            width: 100%;   
+            height: 55px;
+            max-height: 65px; /* Para que no tape contenido */
+            object-fit: contain;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -105,7 +113,7 @@
     <table style="width: 100%; margin-bottom: 10px;">
         <tr>
             <td style="text-align: right; font-weight: bold;">
-                Nro. UAC: <span style="color: red;">{{ $solicitud->Nro_UAC ?? str_pad($solicitud->CodSolicitud, 5, '0', STR_PAD_LEFT) }}</span>
+                Nro. UAC: <span style="color: black;">{{ $solicitud->Nro_UAC ?? str_pad($solicitud->CodSolicitud, 5, '0', STR_PAD_LEFT) }}</span>
             </td>
         </tr>
         <tr>
@@ -266,8 +274,11 @@
     </table>
 
     <div class="footer">
-        Dirección: Prolongación 5ta Av. Final Viaducto Viejo – San Cristóbal Estado Táchira<br>
-        Teléfono: 0276-3480835 | Correo: Corpointa.gobtachira@gmail.com
+            <img src="{{ public_path('images/Pie_Página.jpg') }}" class="footer-img" alt="Pie de Página">
+                <div>
+                    Dirección: Prolongación 5ta Av. Final Viaducto Viejo – San Cristóbal Estado Táchira<br>
+                    Teléfono: 0276-3480835 | Correo: Corpointa.gobtachira@gmail.com
+                </div>
     </div>
 
 </body>

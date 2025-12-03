@@ -126,8 +126,8 @@ class SolicitudController extends Controller
             'archivos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240',
             'fecha_atencion' => 'required|date',
             'fecha_solicitud' => 'required|date',
-            'categoria_solicitud' => 'required|string',
-            'detalle_solicitud' => 'required|string'
+            'categoria_solicitud' => 'nullable|string|required_if:tipo_solicitud_planilla,Solicitud o Petición',
+            'detalle_solicitud' => 'nullable|string|required_if:tipo_solicitud_planilla,Solicitud o Petición',
         ];
 
         $mensajes = [
@@ -208,6 +208,7 @@ class SolicitudController extends Controller
                 }
             }
             
+            if ($validatedData['tipo_solicitud_planilla'] === 'Solicitud o Petición') {
             // Clasificación
             $cat = $request->categoria_solicitud;
             $det = $request->detalle_solicitud;
@@ -249,6 +250,7 @@ class SolicitudController extends Controller
             ]);
 
             $solicitud->update(['TipoSolicitud_FK' => $codTipoSolicitud]);
+            }
 
             DB::commit();
             return redirect()->route('dashboard')->with('success', 'Solicitud registrada exitosamente.');

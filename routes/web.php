@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\SolicitudController;
+use App\Http\Controllers\EstadisticaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/solicitudes/{id}/pdf', [SolicitudController::class, 'generarPDF'])->name('solicitudes.pdf');
 
     Route::post('/solicitudes/exportar-zip', [SolicitudController::class, 'exportarZip'])->name('solicitudes.exportarZip');
+
+    Route::get('/estadisticas', [EstadisticaController::class, 'index'])->name('estadisticas.index');
+
+    Route::get('/estadisticas/excel', [EstadisticaController::class, 'exportarExcel'])->name('estadisticas.excel');
 });
 
 

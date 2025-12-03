@@ -149,13 +149,12 @@
 
             
             <div class="d-flex gap-2">
-    {{-- BOTÓN PDF (NUEVO) --}}
+    {{-- BOTÓN PDF --}}
     <a href="{{ route('solicitudes.pdf', $solicitud->CodSolicitud) }}" class="btn btn-danger" target="_blank">
         <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
-    </a>
+    </a> 
     
-</div>
-
+</div><br>
             {{-- 3. Archivos --}}
             <div class="card card-gradient-body shadow-sm border-0">
                 <div class="card-header bg-dark text-white">

@@ -29,7 +29,7 @@
                         <tbody>
                             @forelse ($solicitudes as $solicitud)
                             <tr>
-                                <td class="fw-bold text-primary">
+                                <td class="fw-bold text-dark">
                                     @if ($solicitud->correspondencia && $solicitud->correspondencia->CodigoInterno)
                                         {{ $solicitud->correspondencia->CodigoInterno }}
                                     @else
@@ -114,20 +114,14 @@
                                 <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
                                 <a href="{{ route('solicitudes.history') }}" class="btn btn-outline-secondary">Limpiar</a>
                             </div>
-
-                            <div class="d-grid gap-2">   {{-- - --}}
-                                <a href="{{ route('solicitudes.pdf', $solicitud->CodSolicitud) }}" class="btn btn-danger" target="_blank">
-                                <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
-                                </a>
-                    </div>
                 </form>
             </div>
         </div>
         <div class="card shadow-sm border-0 mt-3 position-sticky" style="top: 22rem;">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="bi bi-file-earmark-zip"></i> Descarga Masiva</h5>
+        <div class="card-header bg-dark  text-white">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-zip"></i> Descarga de solicitudes procesadas</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body card-gradient-body" >
             <p class="small text-muted mb-2">
                 Descargue todas las planillas PDF (Mensual y semanal).
             </p>
@@ -150,7 +144,7 @@
                 </div>
 
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-success btn-sm">
+                    <button type="submit" class="btn btn-danger btn-sm">
                         <i class="bi bi-download"></i> Descargar ZIP
                     </button>
                 </div>

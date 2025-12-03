@@ -152,8 +152,8 @@
         <input type="datetime-local" class="form-control" id="fecha_atencion" name="fecha_atencion" value="{{ old('fecha_atencion', now()->format('Y-m-d\TH:i')) }}" required>
     </div>
                         <div class="col-md-3">
-                            <label for="nro_uac" class="form-label">Nro. UAC (Opcional):</label>
-                            <input type="text" class="form-control" id="nro_uac" name="nro_uac" value="{{ old('nro_uac') }}" maxlength="10" placeholder="Número de UAC asignado">
+                            <label for="nro_uac" class="form-label">Nro. UAC:</label>
+                            <input type="text" class="form-control" id="nro_uac" name="nro_uac" value="{{ old('nro_uac') }}" maxlength="10" placeholder="UAC-XXXXX" required title="Ingrese el código asignado la Unidad de Atención al Ciudadano">
                         </div>
                         <div class="col-md-3">
                             <label for="tipo_solicitante" class="form-label">Tipo de Solicitante:</label>
@@ -179,32 +179,35 @@
     </select>
 </div>
 
-                        <div class="col-md-6">
-                            <label for="tipo_solicitud_planilla" class="form-label">Tipo de Planilla:</label>
-                            <select class="form-select" id="tipo_solicitud_planilla" name="tipo_solicitud_planilla" required>
-                                <option value="Solicitud o Petición" @if(old('tipo_solicitud_planilla') == 'Solicitud o Petición') selected @endif>Solicitud o Petición</option>
-                                <option value="Quejas, reclamos o sugerencias" @if(old('tipo_solicitud_planilla') == 'Quejas, reclamos o sugerencias') selected @endif>Quejas, reclamos o sugerencias</option>
-                                <option value="Denuncia" @if(old('tipo_solicitud_planilla') == 'Denuncia') selected @endif>Denuncia</option>
-                            </select>
-                        </div>
-
-
-
 <div class="col-md-6">
-    <label for="categoria_solicitud" class="form-label">Clasificación (Área) *:</label>
-    <select class="form-select" id="categoria_solicitud" name="categoria_solicitud" required>
-        <option value="" disabled selected>-- Seleccione Área --</option>
-        @foreach ($categorias as $key => $cat)
-            <option value="{{ $key }}">{{ $cat['label'] }}</option>
-        @endforeach
+    <label for="tipo_solicitud_planilla" class="form-label">Tipo de Planilla:</label>
+    <select class="form-select" id="tipo_solicitud_planilla" name="tipo_solicitud_planilla" required>
+        <option value="Solicitud o Petición" @selected(old('tipo_solicitud_planilla') == 'Solicitud o Petición')>Solicitud o Petición</option>
+        <option value="Quejas, reclamos o sugerencias" @selected(old('tipo_solicitud_planilla') == 'Quejas, reclamos o sugerencias')>Quejas, reclamos o sugerencias</option>
+        <option value="Denuncia" @selected(old('tipo_solicitud_planilla') == 'Denuncia')>Denuncia</option>
     </select>
 </div>
 
-<div class="col-md-6">
-    <label for="detalle_solicitud" class="form-label">Detalle Específico *:</label>
-    <select class="form-select" id="detalle_solicitud" name="detalle_solicitud" required>
-        <option value="" disabled selected>-- Seleccione primero el Área --</option>
-    </select>
+{{-- CONTENEDOR PARA CLASIFICACIÓN (Para ocultarlo/mostrarlo) --}}
+<div class="col-12" id="clasificacion_wrapper">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="categoria_solicitud" class="form-label">Clasificación (Área) *:</label>
+            <select class="form-select" id="categoria_solicitud" name="categoria_solicitud">
+                <option value="" disabled selected>-- Seleccione Área --</option>
+                @foreach ($categorias as $key => $cat)
+                    <option value="{{ $key }}">{{ $cat['label'] }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="detalle_solicitud" class="form-label">Detalle Específico *:</label>
+            <select class="form-select" id="detalle_solicitud" name="detalle_solicitud">
+                <option value="" disabled selected>-- Seleccione primero el Área --</option>
+            </select>
+        </div>
+    </div>
 </div>
 
 
@@ -387,4 +390,36 @@
         }
     });
 </script>
+
+<script>
+    // LÓGICA PARA OCULTAR/MOSTRAR CLASIFICACIÓN
+    const tipoPlanillaSelect = document.getElementById('tipo_solicitud_planilla');
+    const clasificacionWrapper = document.getElementById('clasificacion_wrapper');
+    const catSelect = document.getElementById('categoria_solicitud');
+    const detSelect = document.getElementById('detalle_solicitud');
+
+    function toggleClasificacion() {
+        if (tipoPlanillaSelect.value === 'Solicitud o Petición') {
+            // Mostrar
+            clasificacionWrapper.style.display = 'block';
+            // Hacer requeridos
+            catSelect.required = true;
+            detSelect.required = true;
+        } else {
+            // Ocultar
+            clasificacionWrapper.style.display = 'none';
+            // Quitar requeridos para que no bloquee el envío
+            catSelect.required = false;
+            detSelect.required = false;
+            // Limpiar valores para no enviar basura
+            catSelect.value = "";
+            detSelect.value = "";
+        }
+    }
+
+    // Ejecutar al cargar y al cambiar
+    tipoPlanillaSelect.addEventListener('change', toggleClasificacion);
+    toggleClasificacion(); // Para aplicar el estado inicial correcto
+</script>
+
 @endsection
