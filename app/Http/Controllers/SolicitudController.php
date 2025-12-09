@@ -128,6 +128,11 @@ class SolicitudController extends Controller
             'fecha_solicitud' => 'required|date',
             'categoria_solicitud' => 'nullable|string|required_if:tipo_solicitud_planilla,Solicitud o Petición',
             'detalle_solicitud' => 'nullable|string|required_if:tipo_solicitud_planilla,Solicitud o Petición',
+
+            'AnexaDocumentos' => 'required|boolean',
+            'CantidadDocumentosOriginal' => 'required|integer|min:0',
+            'CantidadDocumentoCopia' => 'required|integer|min:0',
+            'CantidadPaginasAnexo' => 'required|integer|min:0',
         ];
 
         $mensajes = [
@@ -163,10 +168,10 @@ class SolicitudController extends Controller
                 'FechaAtención' => $validatedData['fecha_atencion'],
                 'TipoSolicitante' => $validatedData['tipo_solicitante'],
                 'NivelUrgencia' => $validatedData['nivel_urgencia'],
-                'AnexaDocumentos' => $request->hasFile('archivos'),
-                'CantidadDocumentosOriginal' => 0,
-                'CantidadDocumentoCopia' => 0,
-                'CantidadPaginasAnexo' => 0,
+                'AnexaDocumentos' => $request->AnexaDocumentos,
+                'CantidadDocumentosOriginal' => $request->CantidadDocumentosOriginal ?? 0,
+                'CantidadDocumentoCopia' => $request->CantidadDocumentoCopia ?? 0,
+                'CantidadPaginasAnexo' => $request->CantidadPaginasAnexo ?? 0,
                 'DirecciónHabitación' => $validatedData['direccion_habitacion'],
                 'PuntoReferencia' => $validatedData['punto_referencia'],
                 'CedulaPersona_FK' => $persona->CedulaPersona,

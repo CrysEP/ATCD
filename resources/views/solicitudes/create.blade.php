@@ -231,6 +231,71 @@
                             <textarea class="form-control" id="instruccion_presidencia" name="instruccion_presidencia" rows="2">{{ old('instruccion_presidencia') }}</textarea>
                         </div>
                     </div>
+
+
+{{-- SECCIÓN DE CONTROL DE FOLIOS Y ANEXOS FÍSICOS --}}
+<div class="col-12 mt-4">
+    <div class="p-3 border rounded bg-light">
+        <label class="form-label fw-bold mb-2">Control de Anexos Físicos (Expediente):</label>
+        
+        <div class="row align-items-center g-3">
+            {{-- 1. ¿Anexa Documentos? (Radio Buttons estilo Switch) --}}
+            <div class="col-md-3">
+                <label class="d-block text-muted small mb-1">¿Anexa Documentos?</label>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="AnexaDocumentos" id="anexa_si" value="1" 
+                           {{ old('AnexaDocumentos') == '1' ? 'checked' : '' }} onclick="toggleAnexos(true)">
+                    <label class="btn btn-outline-success" for="anexa_si">SI</label>
+
+                    <input type="radio" class="btn-check" name="AnexaDocumentos" id="anexa_no" value="0" 
+                           {{ old('AnexaDocumentos', '0') == '0' ? 'checked' : '' }} onclick="toggleAnexos(false)">
+                    <label class="btn btn-outline-danger" for="anexa_no">NO</label>
+                </div>
+            </div>
+
+            {{-- 2. Cantidad de Originales --}}
+            <div class="col-md-3">
+                <label for="CantidadDocumentosOriginal" class="form-label small">Originales</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-file-earmark"></i></span>
+                    <input type="number" class="form-control" id="CantidadDocumentosOriginal" 
+                           name="CantidadDocumentosOriginal" 
+                           value="{{ old('CantidadDocumentosOriginal', 0) }}" min="0" 
+                           placeholder="0">
+                </div>
+            </div>
+
+            {{-- 3. Cantidad de Copias --}}
+            <div class="col-md-3">
+                <label for="CantidadDocumentoCopia" class="form-label small">Copias</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-files"></i></span>
+                    <input type="number" class="form-control" id="CantidadDocumentoCopia" 
+                           name="CantidadDocumentoCopia" 
+                           value="{{ old('CantidadDocumentoCopia', 0) }}" min="0" 
+                           placeholder="0">
+                </div>
+            </div>
+
+            {{-- 4. Cantidad de Páginas (Folios) --}}
+            <div class="col-md-3">
+                <label for="CantidadPaginasAnexo" class="form-label small">Total Páginas (Anexos)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-bookmarks"></i></span>
+                    <input type="number" class="form-control" id="CantidadPaginasAnexo" 
+                           name="CantidadPaginasAnexo" 
+                           value="{{ old('CantidadPaginasAnexo', 0) }}" min="0" 
+                           placeholder="0">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
                 </div>
             </div>
 
@@ -420,6 +485,28 @@
     // Ejecutar al cargar y al cambiar
     tipoPlanillaSelect.addEventListener('change', toggleClasificacion);
     toggleClasificacion(); // Para aplicar el estado inicial correcto
+</script>
+
+{{-- SCRIPT PARA BLOQUEAR/DESBLOQUEAR INPUTS --}}
+<script>
+    function toggleAnexos(active) {
+        const inputs = [
+            document.getElementById('CantidadDocumentosOriginal'),
+            document.getElementById('CantidadDocumentoCopia'),
+            document.getElementById('CantidadPaginasAnexo')
+        ];
+
+        inputs.forEach(input => {
+            input.disabled = !active;
+            if (!active) input.value = 0; // Reiniciar a 0 si marca NO
+        });
+    }
+
+    // Ejecutar al cargar para validar estado inicial (por si viene de un old input)
+    document.addEventListener("DOMContentLoaded", function() {
+        const isSiChecked = document.getElementById('anexa_si').checked;
+        toggleAnexos(isSiChecked);
+    });
 </script>
 
 @endsection

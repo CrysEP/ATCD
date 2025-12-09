@@ -213,7 +213,26 @@
                 <span class="label">ANEXA DOCUMENTOS:</span> 
                 SI <div class="check-box">{{ $solicitud->AnexaDocumentos ? 'X' : '' }}</div>
                 NO <div class="check-box">{{ !$solicitud->AnexaDocumentos ? 'X' : '' }}</div>
-                &nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; {{-- Separador visual --}}
+
+        {{-- PARTE 2: DETALLES DE CANTIDAD --}}
+        <span class="label">ORIGINAL:</span>
+        <span style="border-bottom: 1px solid #000; padding: 0 5px; font-weight: bold; display: inline-block; width: 25px; text-align: center;">
+            {{ $solicitud->CantidadDocumentosOriginal > 0 ? $solicitud->CantidadDocumentosOriginal : '' }}
+        </span>
+        &nbsp;&nbsp;
+
+        <span class="label">COPIAS:</span>
+        <span style="border-bottom: 1px solid #000; padding: 0 5px; font-weight: bold; display: inline-block; width: 25px; text-align: center;">
+            {{ $solicitud->CantidadDocumentoCopia > 0 ? $solicitud->CantidadDocumentoCopia : '' }}
+        </span>
+        &nbsp;&nbsp;
+
+        <span class="label">FOLIOS:</span>
+        <span style="border-bottom: 1px solid #000; padding: 0 5px; font-weight: bold; display: inline-block; width: 30px; text-align: center;">
+            {{ $solicitud->CantidadPaginasAnexo > 0 ? $solicitud->CantidadPaginasAnexo : '' }}
+        </span>
+
             </td>
         </tr>
 
