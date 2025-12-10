@@ -130,7 +130,7 @@
 </div>
 
 {{-- IMPORTAR CHART.JS --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
 
 <script>
     // Colores base
@@ -178,7 +178,7 @@
             labels: {!! json_encode($labelsEstatus) !!},
             datasets: [{
                 data: {!! json_encode($dataEstatus) !!},
-                backgroundColor: ['#ffc107', '#0dcaf0', '#198754', '#dc3545', '#6c757d', '#0d6efd'],
+                backgroundColor: ['#0dcaf0', '#ffc107', '#198754', '#dc3545', '#0d6efd', '#6c757d'],
                 hoverOffset: 4
             }]
         },
