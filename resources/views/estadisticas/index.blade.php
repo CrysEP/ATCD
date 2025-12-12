@@ -3,6 +3,18 @@
 @section('title', 'Estadísticas del Sistema')
 
 @section('content')
+
+<style>
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+            min-height: 600px; /* Altura cómoda */
+        }
+        .fc-event {
+            cursor: pointer; /* Manito al pasar el mouse */
+        }
+    </style>
+    
 <div class="container pb-5">
     
     {{-- ENCABEZADO CON FILTROS --}}
@@ -165,6 +177,23 @@
 
 
 
+    <h5 class="mb-3 border-bottom pb-2 mt-5">Días con Solicitudes Procesadas</h5>
+    <div class="card shadow-sm border-0 mb-5 card-gradient-body">
+        <div class="card-body">
+            {{-- Contenedor donde se dibujará el calendario --}}
+            <div id='calendar'></div>
+        </div>
+        <div class="card-footer bg-light">
+            <small class="text-muted d-flex gap-3 justify-content-center">
+                <span><i class="bi bi-circle-fill text-success"></i> Baja (1-5)</span>
+                <span><i class="bi bi-circle-fill text-warning"></i> Media (6-15)</span>
+                <span><i class="bi bi-circle-fill text-danger"></i> Alta (16+)</span>
+            </small>
+        </div>
+    </div>
+
+
+
 </div>
 
 {{-- IMPORTAR CHART.JS --}}
@@ -283,4 +312,38 @@
 
 
 </script>
+
+
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es', // Idioma español
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,listMonth' // Vista mes y lista
+                },
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes',
+                    list: 'Lista'
+                },
+                events: "{{ route('estadisticas.dataCalendario') }}", // Carga los datos JSON
+                eventClick: function(info) {
+                    // Si quieres que abra en una pestaña nueva, descomenta esto:
+                    // info.jsEvent.preventDefault();
+                    // window.open(info.event.url, '_blank');
+                }
+            });
+            calendar.render();
+        });
+    </script>
+
+
+
 @endsection

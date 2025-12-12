@@ -155,4 +155,71 @@ $municipiosAnio = DB::table('solicitudes')
         
         return Excel::download(new EstadisticaExport($mes, $anio), "Reporte_Estadistico_{$mes}_{$anio}.xlsx");
     }
+
+
+public function dataCalendario()
+{
+    // 1. Agrupar solicitudes por día
+ $eventos = [];
+
+    // --- GRUPO 1: SOLICITUDES PROCESADAS (Van al Historial) ---
+    $procesadas = Solicitud::join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+        ->select(
+            DB::raw('DATE(solicitudes.FechaSolicitud) as date'),
+            DB::raw('count(*) as count')
+        )
+        ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 1) // No Pendientes
+        ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) // No Anuladas
+        ->groupBy('date')
+        ->get();
+
+    foreach ($procesadas as $row) {
+        // Semáforo de carga para lo procesado
+        $color = '#198754'; // Verde (Bajo: 1-5)
+        if ($row->count > 5) $color = '#fd7e14'; // Naranja (Medio: 6-15)
+        if ($row->count > 15) $color = '#dc3545'; // Rojo (Alto: 16+)
+
+        $eventos[] = [
+            'title' => $row->count . ' Procesadas',
+            'start' => $row->date,
+            'color' => $color,
+            'textColor' => 'white',
+            // URL: Lleva al Historial
+            'url' => route('solicitudes.history', [
+                'fecha_desde' => $row->date, 
+                'fecha_hasta' => $row->date
+            ])
+        ];
+    }
+
+    // --- GRUPO 2: SOLICITUDES PENDIENTES (Van a la Agenda/Dashboard) ---
+    $pendientes = Solicitud::join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+        ->select(
+            DB::raw('DATE(solicitudes.FechaSolicitud) as date'),
+            DB::raw('count(*) as count')
+        )
+        ->where('relacion_correspondencia.StatusSolicitud_FK', '=', 1) 
+        ->groupBy('date')
+        ->get();
+
+    foreach ($pendientes as $row) {
+        $eventos[] = [
+            'title' => '⚠️ ' . $row->count . ' Pendientes', 
+            'start' => $row->date,
+            'color' => '#0d6efd', 
+            'textColor' => 'white',
+            // URL: Lleva al Dashboard (Agenda)
+            'url' => route('dashboard', [
+                'fecha_desde' => $row->date, 
+                'fecha_hasta' => $row->date
+            ])
+        ];
+    }
+    
+
+    return response()->json($eventos);
+}
+
+
+
 }

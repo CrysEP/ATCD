@@ -55,6 +55,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/estadisticas', [EstadisticaController::class, 'index'])->name('estadisticas.index');
 
     Route::get('/estadisticas/excel', [EstadisticaController::class, 'exportarExcel'])->name('estadisticas.excel');
+
+    Route::get('/estadisticas/data-calendario', [EstadisticaController::class, 'dataCalendario'])->name('estadisticas.dataCalendario');
 });
 
 

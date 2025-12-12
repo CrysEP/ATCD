@@ -61,6 +61,13 @@ class SolicitudController extends Controller
                              ->orderBy('FechaSolicitud', 'desc')
                              ->paginate(20);
 
+
+        $solicitudesHoy = Solicitud::whereDate('FechaSolicitud', now())
+            ->whereHas('correspondencia', function ($q) {
+                $q->where('StatusSolicitud_FK', '!=', 7);
+            })
+            ->count();
+
         return view('dashboard', compact('solicitudes'));
     }
 
