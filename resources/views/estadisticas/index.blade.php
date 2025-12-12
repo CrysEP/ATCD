@@ -54,6 +54,21 @@
 
     {{-- TARJETAS DE RESUMEN --}}
     <div class="row g-4 mb-4">
+
+
+<div class="col-md-4">
+            <div class="card text-white shadow-sm border-0 h-100" style="background-color: #6f42c1;"> {{-- Color Morado --}}
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase mb-1 opacity-75">Recibidas Hoy</h6>
+                        <h2 class="mb-0 fw-bold">{{ $solicitudesHoy }}</h2>
+                        <small>{{ \Carbon\Carbon::now()->format('d/m/Y') }}</small>
+                    </div>
+                    <i class="bi bi-calendar-check-fill fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
         <div class="col-md-6">
             <div class="card bg-primary text-white shadow-sm border-0 h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -127,6 +142,29 @@
         </div>
 
     </div>
+
+<br>
+
+{{-- FILA 3: ESTADÍSTICAS GEOGRÁFICAS ANUALES --}}
+    <h5 class="mb-3 border-bottom pb-2">Distribución Geográfica Anual ({{ $anio }})</h5>
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <div class="card card-gradient-body shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-map-fill text-primary me-2"></i>Municipios con más solicitudes en {{ $anio }}
+                </div>
+                <div class="card-body">
+                    {{-- Altura fija para que se vea bien --}}
+                    <div style="height: 300px;">
+                        <canvas id="chartMunAnio"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 </div>
 
 {{-- IMPORTAR CHART.JS --}}
@@ -200,5 +238,49 @@
             }]
         }
     });
+
+
+
+// 5. NUEVO: MUNICIPIOS DEL AÑO (Barra Vertical)
+    const ctxMunAnio = document.getElementById('chartMunAnio').getContext('2d');
+    new Chart(ctxMunAnio, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($labelsMunAnio) !!},
+            datasets: [{
+                label: 'Total Solicitudes {{ $anio }}',
+                data: {!! json_encode($dataMunAnio) !!},
+                backgroundColor: 'rgba(253, 126, 20, 0.7)', // Color naranja corporativo (según tu variable $primary)
+                borderColor: '#fd7e14',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Importante para que respete el height del div
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.raw + ' Solicitudes';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Solicitudes'
+                    }
+                }
+            }
+        }
+    });
+
+
 </script>
 @endsection

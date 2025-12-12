@@ -19,11 +19,9 @@ class EstadisticaController extends Controller
         
         // Convertir número de mes a nombre para la vista
         $nombreMes = Carbon::create()->month($mes)->locale('es')->monthName;
+        $solicitudesHoy = Solicitud::whereDate('FechaSolicitud', Carbon::now())->count();
 
-        // 1. Total Global (Histórico, sin filtro de mes)
-        // OJO: ¿Quieres el total histórico o el del mes seleccionado? 
-        // Si es reporte mensual, lo lógico es mostrar el total de ESE mes.
-        // Aquí dejo el del mes seleccionado:
+      
         $totalSolicitudes = Solicitud::whereHas('correspondencia', function ($q) {
             $q->where('StatusSolicitud_FK', '!=', 7); // No anuladas
         })->whereMonth('FechaSolicitud', $mes)->whereYear('FechaSolicitud', $anio)->count();
@@ -88,6 +86,8 @@ class EstadisticaController extends Controller
             ->orderByDesc('total')
             ->get();
 
+            
+
         // 7. Calcular el "Ente Top"
         $topEnteNombre = 'N/A';
         $topEnteTotal = 0;
@@ -114,13 +114,34 @@ class EstadisticaController extends Controller
             $dataMeses[$registro->mes - 1] = $registro->total;
         }
 
+
+$municipiosAnio = DB::table('solicitudes')
+            ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
+            ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
+            ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) // No anuladas
+            ->whereYear('FechaSolicitud', $anio) // <--- SOLO FILTRO DE AÑO
+            ->select('municipios.NombreMunicipio', DB::raw('count(*) as total'))
+            ->groupBy('municipios.NombreMunicipio')
+            ->orderByDesc('total')
+            ->limit(10) // Top 10 para no saturar el gráfico
+            ->get();
+
+        // Preparar datos para JS
+        $labelsMunAnio = $municipiosAnio->pluck('NombreMunicipio');
+        $dataMunAnio = $municipiosAnio->pluck('total');
+
+
         return view('estadisticas.index', compact(
+            'solicitudesHoy',
             'totalSolicitudes', 'nombreMes', 'mes', 'anio', 'topEnteNombre', 'topEnteTotal',
             'labelsEstatus', 'dataEstatus',
             'labelsTipo', 'dataTipo',
             'labelsMunMes', 'dataMunMes',
             'labelsEnteMes', 'dataEnteMes',
-            'dataMeses'
+            'dataMeses',
+            'labelsMunAnio', 'dataMunAnio'
         ));
     }
 
