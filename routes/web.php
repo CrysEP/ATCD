@@ -57,6 +57,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/estadisticas/excel', [EstadisticaController::class, 'exportarExcel'])->name('estadisticas.excel');
 
     Route::get('/estadisticas/data-calendario', [EstadisticaController::class, 'dataCalendario'])->name('estadisticas.dataCalendario');
+
+    Route::post('/solicitudes/{id}/subir-archivo', [App\Http\Controllers\SolicitudController::class, 'subirArchivo'])->name('solicitudes.subirArchivo');
+    
+    Route::delete('/archivos/{id}/eliminar', [App\Http\Controllers\SolicitudController::class, 'eliminarArchivo'])->name('archivos.eliminar');
 });
 
 

@@ -217,8 +217,88 @@
                 <button type="submit" class="btn btn-primary btn-lg">Guardar Cambios</button>
             </div>
         </form>
+
+
+<hr class="my-5">
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="bi bi-paperclip"></i> Gestión de Archivos Adjuntos</h5>
+    </div>
+    <div class="card-body">
+        
+        {{-- 1. LISTA DE ARCHIVOS EXISTENTES --}}
+        @if($solicitud->archivos->count() > 0)
+            <h6 class="fw-bold">Archivos Actuales:</h6>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre del Archivo</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($solicitud->archivos as $archivo)
+                            <tr>
+                                <td>
+                                    <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" target="_blank" class="text-decoration-none">
+                                        <i class="bi bi-file-earmark-text"></i> {{ $archivo->nombre_original }}
+                                    </a>
+                                </td>
+                                <td>{{ $archivo->tipo_archivo }}</td>
+                                <td style="width: 150px;">
+                                    {{-- Botón Eliminar --}}
+                                    <form action="{{ route('archivos.eliminar', $archivo->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este archivo? Esta acción es irreversible.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="alert alert-info">
+                No hay archivos adjuntos en esta solicitud.
+            </div>
+        @endif
+
+        {{-- 2. FORMULARIO PARA SUBIR NUEVOS --}}
+        <div class="p-3 border rounded bg-light">
+            <h6 class="fw-bold mb-3"><i class="bi bi-cloud-upload"></i> Subir Nuevos Archivos</h6>
+            
+            {{-- NOTA: Este form es independiente del form principal de editar datos --}}
+            <form action="{{ route('solicitudes.subirArchivo', $solicitud->CodSolicitud) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="row align-items-end">
+                    <div class="col-md-9">
+                        <label for="nuevos_archivos" class="form-label">Seleccionar documentos (PDF, Imágenes, Excel)</label>
+                        <input type="file" class="form-control" name="nuevos_archivos[]" id="nuevos_archivos" multiple accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx">
+                    </div>
+                    <div class="col-md-3 mt-3 mt-md-0">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-upload"></i> Cargar Archivos
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+
     </div>
 </div>
+
+
+
+
+
+
 
 <script>
     const municipiosData = @json($municipios);

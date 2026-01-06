@@ -13,6 +13,12 @@
         .fc-event {
             cursor: pointer; /* Manito al pasar el mouse */
         }
+
+        /* Para la mayúscula que quería el inge 
+        .fc-toolbar-title {
+        text-transform: capitalize;
+    } */
+
     </style>
     
 <div class="container pb-5">
@@ -69,7 +75,7 @@
 
 
 <div class="col-md-4">
-            <div class="card text-white shadow-sm border-0 h-100" style="background-color: #6f42c1;"> {{-- Color Morado --}}
+            <div class="card text-white shadow-sm border-0 h-100" style="background-color: #6f42c1;">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
                         <h6 class="text-uppercase mb-1 opacity-75">Recibidas Hoy</h6>
@@ -81,19 +87,19 @@
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card bg-primary text-white shadow-sm border-0 h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
                         <h6 class="text-uppercase mb-1 opacity-75">Total Histórico</h6>
                         <h2 class="mb-0 fw-bold">{{ $totalSolicitudes }}</h2>
-                        <small>Solicitudes registradas</small>
+                        <small>Solicitudes registradas al mes</small>
                     </div>
                     <i class="bi bi-folder2-open fs-1 opacity-50"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card bg-success text-white shadow-sm border-0 h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
@@ -131,22 +137,26 @@
         </div>
     </div>
 
-    {{-- FILA 2: ESTADÍSTICAS GLOBALES E HISTÓRICAS --}}
-    <h5 class="mb-3 border-bottom pb-2">Métricas Globales e Históricas</h5>
-    <div class="row g-4">
-        
-        <div class="col-md-4">
+      <div class="col-md-4">
             <div class="card card-gradient-body shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-bold">Estatus Global</div>
+                <div class="card-header bg-white fw-bold">Estatus Global por mes</div>
                 <div class="card-body">
                     <canvas id="chartEstatus"></canvas>
                 </div>
             </div>
         </div>
 
+        <br>
+
+    {{-- FILA 2: ESTADÍSTICAS GLOBALES E HISTÓRICAS --}}
+    <h5 class="mb-3 border-bottom pb-2">Métricas Globales e Históricas</h5>
+    <div class="row g-4">
+        
+      
+
         <div class="col-md-8">
             <div class="card card-gradient-body shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-bold">Comportamiento Anual ({{ date('Y') }})</div>
+                <div class="card-header bg-white fw-bold">Comportamiento Anual ({{ $anio }})</div>
                 <div class="card-body">
                     <canvas id="chartMeses" height="100"></canvas>
                 </div>
@@ -166,7 +176,7 @@
                     <i class="bi bi-map-fill text-primary me-2"></i>Municipios con más solicitudes en {{ $anio }}
                 </div>
                 <div class="card-body">
-                    {{-- Altura fija para que se vea bien --}}
+
                     <div style="height: 300px;">
                         <canvas id="chartMunAnio"></canvas>
                     </div>
@@ -180,7 +190,7 @@
     <h5 class="mb-3 border-bottom pb-2 mt-5">Días con Solicitudes Procesadas</h5>
     <div class="card shadow-sm border-0 mb-5 card-gradient-body">
         <div class="card-body">
-            {{-- Contenedor donde se dibujará el calendario --}}
+        
             <div id='calendar'></div>
         </div>
         <div class="card-footer bg-light">
@@ -216,8 +226,17 @@
             }]
         },
         options: {
-            indexAxis: 'y', // Barras horizontales para leer mejor los nombres largos
-            plugins: { legend: { display: false } }
+            indexAxis: 'y', 
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {  
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
+                    }
+                }
+            }
         }
     });
 
@@ -234,25 +253,63 @@
             }]
         },
         options: {
-            plugins: { legend: { display: false } }
+        
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { 
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
+                    }
+                }
+            }
         }
     });
 
     // 3. ESTATUS GLOBAL (Dona)
+    const rawLabelsEstatus = {!! json_encode($labelsEstatus) !!};
+    const rawDataEstatus = {!! json_encode($dataEstatus) !!};
+
+    const labelsConConteo = rawLabelsEstatus.map((label, index) => {
+        return `${label}: ${rawDataEstatus[index]}`;
+    });
+
     new Chart(document.getElementById('chartEstatus'), {
         type: 'doughnut',
         data: {
-            labels: {!! json_encode($labelsEstatus) !!},
+            labels: labelsConConteo, 
             datasets: [{
-                data: {!! json_encode($dataEstatus) !!},
+                data: rawDataEstatus,
                 backgroundColor: ['#0dcaf0', '#ffc107', '#198754', '#dc3545', '#0d6efd', '#6c757d'],
                 hoverOffset: 4
             }]
         },
-        options: { plugins: { legend: { position: 'bottom' } } }
+        options: { 
+            plugins: { 
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,         
+                        font: {
+                            weight: 'bold'   
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label; 
+                        }
+                    }
+                }
+            } 
+        }
     });
 
-    // 4. HISTÓRICO ANUAL (Línea)
+
+// 4. HISTÓRICO ANUAL (Línea)
     new Chart(document.getElementById('chartMeses'), {
         type: 'line',
         data: {
@@ -263,11 +320,33 @@
                 borderColor: '#198754',
                 backgroundColor: 'rgba(25, 135, 84, 0.1)',
                 fill: true,
-                tension: 0.3
+                tension: 0.3 // Suaviza la curva de la línea
             }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.raw + ' Solicitudes';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Cantidad' },
+                    ticks: {
+                        stepSize: 1,   
+                        precision: 0
+                    }
+                }
+            }
         }
-    });
-
+    });    
 
 
 // 5. NUEVO: MUNICIPIOS DEL AÑO (Barra Vertical)
@@ -279,7 +358,7 @@
             datasets: [{
                 label: 'Total Solicitudes {{ $anio }}',
                 data: {!! json_encode($dataMunAnio) !!},
-                backgroundColor: 'rgba(253, 126, 20, 0.7)', // Color naranja corporativo (según tu variable $primary)
+                backgroundColor: 'rgba(253, 126, 20, 0.7)', 
                 borderColor: '#fd7e14',
                 borderWidth: 1,
                 borderRadius: 4
@@ -298,13 +377,19 @@
                     }
                 }
             },
-            scales: {
+          scales: {
                 y: {
                     beginAtZero: true,
                     title: {
                         display: true,
                         text: 'Cantidad de Solicitudes'
+                    },
+                  
+                    ticks: {
+                        stepSize: 1,   // Salto de 1 en 1
+                        precision: 0   // Sin decimales
                     }
+                  
                 }
             }
         }
@@ -335,7 +420,7 @@
                 },
                 events: "{{ route('estadisticas.dataCalendario') }}", // Carga los datos JSON
                 eventClick: function(info) {
-                    // Si quieres que abra en una pestaña nueva, descomenta esto:
+                    // Para que abra en una pestaña nueva, descomentar:
                     // info.jsEvent.preventDefault();
                     // window.open(info.event.url, '_blank');
                 }

@@ -119,8 +119,8 @@ class SolicitudController extends Controller
             'punto_referencia' => 'nullable|string',
             'fecha_nacimiento' => 'required|date|before:tomorrow',
             
-            // --- CAMBIOS A PLURAL ---
-            'nro_uac' => 'nullable|string|max:50|unique:solicitudes,Nro_UAC',
+          
+            'nro_uac' => 'nullable|string|max:50|',
             'tipo_ente' => 'required|integer|exists:tipos_entes,CodTipoEnte',
             // ------------------------
 
@@ -168,6 +168,8 @@ class SolicitudController extends Controller
                 ]
             );
 
+            $nuevoUAC = $this->generarProximoUAC();
+
             $solicitud = Solicitud::create([
                 'TipoSolicitudPlanilla' => $validatedData['tipo_solicitud_planilla'],
                 'DescripcionSolicitud' => $validatedData['descripcion'],
@@ -182,7 +184,7 @@ class SolicitudController extends Controller
                 'DirecciónHabitación' => $validatedData['direccion_habitacion'],
                 'PuntoReferencia' => $validatedData['punto_referencia'],
                 'CedulaPersona_FK' => $persona->CedulaPersona,
-                'Nro_UAC' => $validatedData['nro_uac'],
+                'Nro_UAC' => $nuevoUAC,
                 'Funcionario_FK' => auth()->user()->funcionarioData->CodFuncionario,
                 'TipoSolicitud_FK' => null,
             ]);
@@ -635,17 +637,19 @@ class SolicitudController extends Controller
 
     
 /** Genera un ZIP con los PDFs de las solicitudes procesadas en un rango de fechas. **/
+  /**
+     * Genera un ZIP con los PDFs y un Resumen Ejecutivo en Word (.docx).
+     */
     public function exportarZip(Request $request)
     {
         $request->validate([
             'fecha_desde_export' => 'required|date',
             'fecha_hasta_export' => 'required|date|after_or_equal:fecha_desde_export',
         ]);
-        // 1. Aumentar tiempo de ejecución (generar muchos PDFs toma tiempo)
-        set_time_limit(300); // 5 minutos
 
-        // 2. Buscar Solicitudes PROCESADAS (Igual que en el historial: != 1 y != 7)
-        // Usamos whereBetween para el rango de fechas (incluye las horas del día final)
+        set_time_limit(300); // 5 minutos de tiempo límite
+
+        // 1. Buscar Solicitudes PROCESADAS (Status != 1 y != 7)
         $solicitudes = Solicitud::whereHas('correspondencia', function ($q) {
                 $q->where('StatusSolicitud_FK', '!=', 1)
                   ->where('StatusSolicitud_FK', '!=', 7);
@@ -659,34 +663,193 @@ class SolicitudController extends Controller
             return back()->with('error', 'No se encontraron solicitudes procesadas en ese rango de fechas.');
         }
 
-        // 3. Crear el archivo ZIP temporal
-        $zipName = 'reporte-mensual-solicitudes-corpointa-' . now()->format('Ymd-His') . '.zip';
+        // --- PREPARACIÓN DE ESTADÍSTICAS PARA EL RESUMEN ---
+        $stats = [
+            'Solicitud o Petición' => [],
+            'Denuncias y Quejas'   => []
+        ];
+        
+        // Inicializamos contadores para evitar errores de índice
+        $estadosPosibles = ['En Revisión', 'Aceptada', 'Rechazada', 'Respuesta Parcial', 'Resuelta'];
+        foreach ($stats as $key => $val) {
+            foreach ($estadosPosibles as $estado) {
+                $stats[$key][$estado] = 0;
+            }
+        }
+
+        // 2. Crear el archivo ZIP
+        $zipName = 'reporte-mensual-corpointa-' . now()->format('Ymd-His') . '.zip';
         $zipPath = storage_path('app/public/' . $zipName);
         
         $zip = new \ZipArchive;
         if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
             
+            // A. Generar y agregar PDFs individuales
             foreach ($solicitudes as $solicitud) {
-                // Generar PDF en memoria (vista pdf.blade.php)
+                // 1. PDF
                 $pdf = Pdf::loadView('solicitudes.pdf', compact('solicitud'));
                 $pdf->setPaper('letter', 'portrait');
-                $content = $pdf->output();
-
-                // Nombre del archivo dentro del ZIP
-                // $codigoLimpio = preg_replace('/[^A-Za-z0-9\-]/', '', ($solicitud->Nro_UAC ?? 'Sin-UAC'));
                 $nombreArchivo = 'Solicitud-' . ($solicitud->Nro_UAC ?? $solicitud->CodSolicitud) . '.pdf';
+                $zip->addFromString($nombreArchivo, $pdf->output());
+
+                // 2. Conteo Estadístico para el Word
+                $tipo = $solicitud->TipoSolicitudPlanilla;
+                $status = $solicitud->correspondencia->status->NombreStatusSolicitud ?? 'Desconocido';
+
+                // Clasificamos: Solicitudes vs (Denuncias + Quejas)
+                $categoria = ($tipo === 'Solicitud o Petición') ? 'Solicitud o Petición' : 'Denuncias y Quejas';
                 
-                // Agregar al ZIP
-                $zip->addFromString($nombreArchivo, $content);
+                if (isset($stats[$categoria][$status])) {
+                    $stats[$categoria][$status]++;
+                } else {
+                    $stats[$categoria][$status] = 1;
+                }
             }
-            
+
+            // B. Generar el Resumen Ejecutivo (.docx)
+            $phpWord = new \PhpOffice\PhpWord\PhpWord();
+            $section = $phpWord->addSection();
+
+            // Estilos
+            $headerStyle = ['bold' => true, 'size' => 16, 'color' => '1F497D']; // Azul Institucional
+            $subHeaderStyle = ['bold' => true, 'size' => 12, 'marginTop' => 200];
+            $tableStyle = ['borderSize' => 6, 'borderColor' => '999999', 'cellMargin' => 50];
+            $phpWord->addTableStyle('StatsTable', $tableStyle);
+
+            // Título
+            $section->addText('Resumen Ejecutivo de Solicitudes Procesadas', $headerStyle);
+            $section->addText('Período: ' . \Carbon\Carbon::parse($request->fecha_desde_export)->format('d/m/Y') . ' al ' . \Carbon\Carbon::parse($request->fecha_hasta_export)->format('d/m/Y'));
+            $section->addText('Total Documentos en este reporte: ' . $solicitudes->count(), ['italic' => true]);
+            $section->addTextBreak(1);
+
+            // Función auxiliar para dibujar tablas
+            $crearTablaResumen = function($titulo, $datos) use ($section, $subHeaderStyle) {
+                $section->addText($titulo, $subHeaderStyle);
+                $table = $section->addTable('StatsTable');
+                
+                $table->addRow();
+                $table->addCell(4000, ['bgColor' => 'E0E0E0'])->addText('Estatus / Estado', ['bold' => true]);
+                $table->addCell(2000, ['bgColor' => 'E0E0E0'])->addText('Cantidad', ['bold' => true]);
+
+                $totalParcial = 0;
+                foreach ($datos as $estado => $cantidad) {
+                    if ($cantidad > 0) { // Solo mostrar si hay datos
+                        $table->addRow();
+                        $table->addCell(4000)->addText($estado);
+                        $table->addCell(2000)->addText((string)$cantidad);
+                        $totalParcial += $cantidad;
+                    }
+                }
+                
+                // Total de la sección
+                $table->addRow();
+                $table->addCell(4000, ['bgColor' => 'F2F2F2'])->addText('TOTAL ' . strtoupper($titulo), ['bold' => true]);
+                $table->addCell(2000, ['bgColor' => 'F2F2F2'])->addText((string)$totalParcial, ['bold' => true]);
+                
+                $section->addTextBreak(1);
+            };
+
+            // Dibujar las dos tablas
+            $crearTablaResumen('1. Solicitudes y Peticiones', $stats['Solicitud o Petición']);
+            $crearTablaResumen('2. Denuncias y Quejas', $stats['Denuncias y Quejas']);
+
+            // Guardar Word temporalmente
+            $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+            $wordPath = storage_path('app/public/Resumen_Solicitudes_Procesadas.docx');
+            $objWriter->save($wordPath);
+
+            // Agregar Word al ZIP
+            $zip->addFile($wordPath, '00_Resumen_Solicitudes_Procesadas.docx');
+
             $zip->close();
+
+            // Limpiar archivo temporal Word
+            @unlink($wordPath);
+
         } else {
             return back()->with('error', 'No se pudo crear el archivo ZIP.');
         }
 
-        // 4. Descargar y luego eliminar el temporal
+        // Descargar y eliminar ZIP
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
+
+
+/** Se supone que genera el código UAC con formato UAC-00001. Se reinicia anualmente buscando solo en el año actual.*/
+ private function generarProximoUAC()
+    {
+        $anioActual = date('Y');
+
+        // Busca la última solicitud DE ESTE AÑO que tenga UAC
+        $ultimaSolicitud = Solicitud::whereYear('FechaSolicitud', $anioActual)
+                            ->whereNotNull('Nro_UAC')
+                            ->orderBy('CodSolicitud', 'desc')
+                            ->first();
+
+        if (!$ultimaSolicitud) {
+            return 'UAC-00001'; // Es el primero del año
+        }
+
+        // Extrae el número (ej: UAC-00045 -> 45)
+        $numeroString = substr($ultimaSolicitud->Nro_UAC, 4); 
+        $numero = intval($numeroString); 
+
+        // Suma 1 y rellena con ceros (46 -> UAC-00046)
+        return 'UAC-' . str_pad($numero + 1, 5, '0', STR_PAD_LEFT);
+    }
+
+
+public function subirArchivo(Request $request, $id)
+    {
+        $request->validate([
+            'nuevos_archivos.*' => 'required|file|mimes:pdf,jpg,jpeg,png,xls,xlsx|max:10240', // 10MB
+        ]);
+
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Verificar estado (opcional: si quieres bloquear subidas en solicitudes anuladas)
+        if ($solicitud->correspondencia && $solicitud->correspondencia->StatusSolicitud_FK == 7) {
+            return back()->with('error', 'No se pueden agregar archivos a una solicitud anulada.');
+        }
+
+        if ($request->hasFile('nuevos_archivos')) {
+            foreach ($request->file('nuevos_archivos') as $file) {
+                $path = $file->store('solicitudes', 'public');
+
+                $solicitud->archivos()->create([
+                    'nombre_original' => $file->getClientOriginalName(),
+                    'ruta_archivo' => $path,
+                    'tipo_archivo' => $file->getClientMimeType(),
+                    'tamano_archivo' => $file->getSize(),
+                ]);
+            }
+            return back()->with('success', 'Archivos cargados correctamente.');
+        }
+
+        return back()->with('error', 'No se seleccionó ningún archivo.');
+    }
+
+
+
+public function eliminarArchivo($id)
+    {
+        $archivo = \App\Models\ArchivoSolicitud::findOrFail($id);
+        
+        // Verificar si la solicitud padre está anulada (opcional)
+        if ($archivo->solicitud->correspondencia && $archivo->solicitud->correspondencia->StatusSolicitud_FK == 7) {
+            return back()->with('error', 'No se puede eliminar archivos de una solicitud anulada.');
+        }
+
+        // 1. Eliminar el archivo físico del disco
+        if (Storage::disk('public')->exists($archivo->ruta_archivo)) {
+            Storage::disk('public')->delete($archivo->ruta_archivo);
+        }
+
+        // 2. Eliminar registro de la BD
+        $archivo->delete();
+
+        return back()->with('success', 'Archivo eliminado correctamente.');
+    }
+
 
 }
