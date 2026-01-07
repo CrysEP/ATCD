@@ -133,6 +133,28 @@ $municipiosAnio = DB::table('solicitudes')
         $dataMunAnio = $municipiosAnio->pluck('total');
 
 
+
+// 1. Total Denuncias
+        $denunciasMes = Solicitud::whereHas('correspondencia', function ($q) {
+                $q->where('StatusSolicitud_FK', '!=', 7); // No anuladas
+            })
+            ->where('TipoSolicitudPlanilla', 'Denuncia')
+            ->whereMonth('FechaSolicitud', $mes)
+            ->whereYear('FechaSolicitud', $anio)
+            ->count();
+
+        // 2. Total Quejas y Sugerencias
+        $quejasMes = Solicitud::whereHas('correspondencia', function ($q) {
+                $q->where('StatusSolicitud_FK', '!=', 7);
+            })
+            ->where('TipoSolicitudPlanilla', 'Quejas, reclamos o sugerencias')
+            ->whereMonth('FechaSolicitud', $mes)
+            ->whereYear('FechaSolicitud', $anio)
+            ->count();
+
+
+
+
         return view('estadisticas.index', compact(
             'solicitudesHoy',
             'totalSolicitudes', 'nombreMes', 'mes', 'anio', 'topEnteNombre', 'topEnteTotal',
@@ -141,7 +163,8 @@ $municipiosAnio = DB::table('solicitudes')
             'labelsMunMes', 'dataMunMes',
             'labelsEnteMes', 'dataEnteMes',
             'dataMeses',
-            'labelsMunAnio', 'dataMunAnio'
+            'labelsMunAnio', 'dataMunAnio',
+            'denunciasMes', 'quejasMes'
         ));
     }
 

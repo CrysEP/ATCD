@@ -75,10 +75,10 @@
 
 
 <div class="col-md-4">
-            <div class="card text-white shadow-sm border-0 h-100" style="background-color: #6f42c1;">
+            <div class="card text-muted shadow-sm border-0 h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
-                        <h6 class="text-uppercase mb-1 opacity-75">Recibidas Hoy</h6>
+                        <h6 class="text-muted text-uppercase mb-1 opacity-75">Recibidas Hoy</h6>
                         <h2 class="mb-0 fw-bold">{{ $solicitudesHoy }}</h2>
                         <small>{{ \Carbon\Carbon::now()->format('d/m/Y') }}</small>
                     </div>
@@ -88,10 +88,10 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card bg-primary text-white shadow-sm border-0 h-100">
+            <div class="card text-muted shadow-sm border-0 h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
-                        <h6 class="text-uppercase mb-1 opacity-75">Total Histórico</h6>
+                        <h6 class="text-muted text-uppercase mb-1 opacity-75">Total Histórico</h6>
                         <h2 class="mb-0 fw-bold">{{ $totalSolicitudes }}</h2>
                         <small>Solicitudes registradas al mes</small>
                     </div>
@@ -100,10 +100,10 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-success text-white shadow-sm border-0 h-100">
+            <div class="card text-muted shadow-sm border-0 h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
                     <div>
-                        <h6 class="text-uppercase mb-1 opacity-75">Más Solicitado en {{ ucfirst($nombreMes) }}</h6>
+                        <h6 class="text-muted text-uppercase mb-1 opacity-75">Más Solicitado en {{ ucfirst($nombreMes) }}</h6>
                         <h2 class="mb-0 fw-bold">{{ $topEnteNombre }}</h2>
                         <small>{{ $topEnteTotal }} solicitudes recibidas</small>
                     </div>
@@ -112,6 +112,47 @@
             </div>
         </div>
     </div>
+
+
+<div class="row g-4 mb-4">
+        {{-- Tarjeta de Denuncias --}}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #dc3545;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1 fw-bold">Denuncias</h6>
+                            <h2 class="mb-0 fw-bold text-danger">{{ $denunciasMes }}</h2>
+                            <small class="text-muted">Registradas este mes</small>
+                        </div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3 text-danger">
+                            <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {{-- Tarjeta de Quejas --}}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #ffc107;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1 fw-bold">Quejas y Sugerencias</h6>
+                            <h2 class="mb-0 fw-bold text-warning" style="color: #ffc107 !important;">{{ $quejasMes }}</h2>
+                            <small class="text-muted">Registradas este mes</small>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3 text-warning">
+                            <i class="bi bi-megaphone-fill fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     {{-- FILA 1: ESTADÍSTICAS DEL MES ACTUAL --}}
     <h5 class="mb-3 border-bottom pb-2">Estadísticas del Mes ({{ ucfirst($nombreMes) }})</h5>
@@ -147,6 +188,11 @@
         </div>
 
         <br>
+
+
+
+
+
 
     {{-- FILA 2: ESTADÍSTICAS GLOBALES E HISTÓRICAS --}}
     <h5 class="mb-3 border-bottom pb-2">Métricas Globales e Históricas</h5>

@@ -61,6 +61,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/solicitudes/{id}/subir-archivo', [App\Http\Controllers\SolicitudController::class, 'subirArchivo'])->name('solicitudes.subirArchivo');
     
     Route::delete('/archivos/{id}/eliminar', [App\Http\Controllers\SolicitudController::class, 'eliminarArchivo'])->name('archivos.eliminar');
+
+    Route::get('/solicitudes/{id}/ticket', [App\Http\Controllers\SolicitudController::class, 'generarTicket'])->name('solicitudes.ticket');
 });
 
 

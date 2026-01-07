@@ -852,4 +852,30 @@ public function eliminarArchivo($id)
     }
 
 
+
+    public function generarTicket($id)
+    {
+        $solicitud = Solicitud::with(['persona', 'correspondencia', 'funcionario'])->findOrFail($id);
+
+     
+        $clasificacion = $solicitud->TipoSolicitudPlanilla; 
+        
+     
+        if ($solicitud->TipoSolicitud_FK) {
+            $tipo = DB::table('tipos_solicitudes')->where('CodTipoSolicitud', $solicitud->TipoSolicitud_FK)->first();
+
+        }
+
+        $pdf = Pdf::loadView('solicitudes.ticket', compact('solicitud', 'clasificacion'));
+        
+        // Configurar tamaño de papel: [0, 0, ancho_puntos, alto_puntos]
+        // 1 cm ≈ 28.35 puntos 
+        // Ticket de 8cm x 20cm (aprox) para impresoras térmicas o media hoja
+        $customPaper = [0, 0, 396, 269]; 
+        $pdf->setPaper($customPaper, 'portrait');
+
+        return $pdf->stream('Ticket-UAC-' . ($solicitud->Nro_UAC ?? 'Temp') . '.pdf');
+    }
+
+
 }

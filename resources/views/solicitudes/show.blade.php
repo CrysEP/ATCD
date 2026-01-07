@@ -153,6 +153,12 @@
     <a href="{{ route('solicitudes.pdf', $solicitud->CodSolicitud) }}" class="btn btn-danger" target="_blank">
         <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
     </a> 
+
+
+    {{-- Botón Ticket --}}
+<a href="{{ route('solicitudes.ticket', $solicitud->CodSolicitud) }}" target="_blank" class="btn btn-outline-dark">
+    <i class="bi bi-receipt"></i> Imprimir Ticket
+</a>
     
 </div><br>
             {{-- 3. Archivos --}}
