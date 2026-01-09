@@ -8,12 +8,11 @@
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
-            padding: 10px; /* Margen interno de la tarjeta */
+            padding: 10px; /* Margen interno del ticket o tarjeta */
         }
         
-        /* Contenedor principal con borde de tarjeta */
         .card-container {
-            border: 2px solid #1F497D; /* Azul Institucional */
+            border: 2px solid #1F497D;
             border-radius: 10px;
             padding: 10px;
             height: 245px; /* Altura ajustada al papel */
@@ -24,26 +23,26 @@
 
         .watermark {
         position: absolute;
-        top: 50%;        
+        top: 44%;        
         left: 50%;          
         transform: translate(-62%, -15%);
         width: 70%;     
-        opacity: 0.10;      
+        opacity: 0.15;      
         z-index: -1;     
         pointer-events: none;
     }
 
 
-        /* Tabla para maquetación (DomPDF no soporta bien Flexbox) */
+        /* El espacio del QR y el bloque del UAC (DomPDF no soporta bien Flexbox) */
         .layout-table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
         }
 
         .header-logo {
             font-size: 18px;
             font-weight: bold;
-            color: #1F497D;
+            color: #0B59F4;
             text-transform: uppercase;
         }
 
@@ -54,7 +53,7 @@
         }
 
         .uac-box {
-            background-color: #1F497D;
+            background-color: #0f79ea;
             color: white;
             padding: 5px 10px;
             font-size: 14px;
@@ -166,7 +165,7 @@
                 <td style="width: 80px; vertical-align: middle; text-align: center; border-left: 1px dashed #ccc;">
                     
                     {{-- QR GENERADO --}}
-                    {{-- Usamos una API pública para generar el QR sin instalar librerías extras por ahora --}}
+                    {{-- API pública para generar el QR sin instalar librerías extras, por ahora --}}
                     {{-- El contenido del QR es el ID de la solicitud para futuro rastreo --}}
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ route('solicitudes.show', $solicitud->CodSolicitud) }}" 
                          style="width: 70px; height: 70px;" alt="QR">

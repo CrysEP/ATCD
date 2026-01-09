@@ -115,6 +115,39 @@ class EstadisticaController extends Controller
         }
 
 
+
+// 8. Solicitudes por Nivel de Urgencia
+        $urgenciaData = Solicitud::whereHas('correspondencia', function ($q) {
+                $q->where('StatusSolicitud_FK', '!=', 7);
+            })
+            ->whereMonth('FechaSolicitud', $mes)
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('NivelUrgencia', DB::raw('count(*) as total'))
+            ->groupBy('NivelUrgencia')
+            ->get();
+
+        // 9. Solicitudes por Tipo de Solicitante (Personal, Institucional, etc.)
+        $tipoSolicitanteData = Solicitud::whereHas('correspondencia', function ($q) {
+                $q->where('StatusSolicitud_FK', '!=', 7);
+            })
+            ->whereMonth('FechaSolicitud', $mes)
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('TipoSolicitante', DB::raw('count(*) as total'))
+            ->groupBy('TipoSolicitante')
+            ->get();
+
+        // --- PREPARAR DATOS PARA LA VISTA ---
+        
+        // Urgencia
+        $labelsUrgencia = $urgenciaData->pluck('NivelUrgencia');
+        $dataUrgencia = $urgenciaData->pluck('total');
+
+        // Tipo Solicitante
+        $labelsTipoSolicitante = $tipoSolicitanteData->pluck('TipoSolicitante');
+        $dataTipoSolicitante = $tipoSolicitanteData->pluck('total');
+
+
+
 $municipiosAnio = DB::table('solicitudes')
             ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
             ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
@@ -164,13 +197,14 @@ $municipiosAnio = DB::table('solicitudes')
             'labelsEnteMes', 'dataEnteMes',
             'dataMeses',
             'labelsMunAnio', 'dataMunAnio',
-            'denunciasMes', 'quejasMes'
+            'denunciasMes', 'quejasMes',
+            'labelsUrgencia', 'dataUrgencia',
+            'labelsTipoSolicitante', 'dataTipoSolicitante'
         ));
     }
 
     /**
-     * Descargar Excel del mes seleccionado
-     */
+     * Descargar Excel del mes seleccionado*/
     public function exportarExcel(Request $request)
     {
         $mes = $request->mes;
@@ -242,6 +276,8 @@ public function dataCalendario()
 
     return response()->json($eventos);
 }
+
+
 
 
 

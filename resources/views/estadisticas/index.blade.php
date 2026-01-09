@@ -189,7 +189,28 @@
 
         <br>
 
+{{-- GRAFICO: NIVEL DE URGENCIA --}}
+        <div class="col-lg-6">
+            <div class="card card-gradient-body shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">Nivel de Urgencia</div>
+                <div class="card-body">
+                    <canvas id="chartUrgencia" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
 
+        <br>
+
+        {{-- GRAFICO: TIPO DE SOLICITANTE --}}
+        <div class="col-lg-6">
+            <div class="card card-gradient-body shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">Perfil del Solicitante</div>
+                <div class="card-body">
+                    <canvas id="chartTipoSolicitante" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
@@ -442,7 +463,53 @@
     });
 
 
+    
+// 6. NIVEL DE URGENCIA
+    new Chart(document.getElementById('chartUrgencia'), {
+        type: 'pie',
+        data: {
+            labels: {!! json_encode($labelsUrgencia) !!},
+            datasets: [{
+                data: {!! json_encode($dataUrgencia) !!},
+                backgroundColor: [
+                    '#dc3545', // Alto (Rojo)
+                    '#ffc107', // Medio (Amarillo)
+                    '#0d6efd'  // Bajo (Azul)
+                ],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // 7. TIPO DE SOLICITANTE
+    new Chart(document.getElementById('chartTipoSolicitante'), {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($labelsTipoSolicitante) !!},
+            datasets: [{
+                label: 'Cantidad',
+                data: {!! json_encode($dataTipoSolicitante) !!},
+                backgroundColor: '#0f79ea',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0 } // Enteros
+                }
+            }
+        }
+    });
+
+
 </script>
+
 
 
 
