@@ -160,6 +160,15 @@
                                    value="{{ old('fecha_atencion', \Carbon\Carbon::parse($solicitud->FechaAtención)->format('Y-m-d\TH:i')) }}" required>
                         </div>
                         
+
+<div class="col-md-3">
+    <label class="form-label">Código Interno (Expediente):</label>
+    <input type="text" class="form-control" name="codigo_interno" 
+           value="{{ old('codigo_interno', $solicitud->correspondencia->CodigoInterno) }}" 
+           required maxlength="100">
+</div>
+
+
                         <div class="col-md-3">
                             <label class="form-label">Nro. UAC:</label>
                             <input type="text" class="form-control" name="nro_uac" value="{{ old('nro_uac', $solicitud->Nro_UAC) }}">

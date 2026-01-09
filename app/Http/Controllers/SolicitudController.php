@@ -17,6 +17,8 @@ use App\Models\Usuario;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+
+
 class SolicitudController extends Controller
 {
     public function index(Request $request)
@@ -190,8 +192,24 @@ class SolicitudController extends Controller
             ]);
 
             $ente = TipoEnte::findOrFail($validatedData['tipo_ente']);
+
+$anioActual = now()->year;
+            
+            // Buscamos la última solicitud DE ESTE TIPO DE ENTE para ver su año
+            $ultimaCorrespondencia = RelacionCorrespondencia::where('TipoEnte_FK', $ente->CodTipoEnte)
+                                        ->latest('FechaRecibido')
+                                        ->first();
+
+            // Si la última fue del año pasado (o no existe), reiniciamos a 0
+            if ($ultimaCorrespondencia && $ultimaCorrespondencia->FechaRecibido->year < $anioActual) {
+                $ente->ContadorActual = 0;
+            }
+
+
+
             $ente->increment('ContadorActual');
-            $codigoInterno = $ente->PrefijoCodigo . '-' . str_pad($ente->ContadorActual, 5, '0', STR_PAD_LEFT);
+           $codigoInterno = $ente->PrefijoCodigo . '-' . str_pad($ente->ContadorActual, 5, '0', STR_PAD_LEFT) . '-' . $anioActual;
+
 
             $correspondencia = RelacionCorrespondencia::create([
                 'CodigoInterno' => $codigoInterno,
@@ -265,6 +283,13 @@ class SolicitudController extends Controller
 
             $solicitud->update(['TipoSolicitud_FK' => $codTipoSolicitud]);
             }
+\App\Models\Bitacora::registrar(
+                'Registrar', 
+                'Solicitudes', 
+                $solicitud->CodSolicitud,
+                $solicitud->Nro_UAC,
+                "Registro inicial de la solicitud."
+            );
 
             DB::commit();
             return redirect()->route('dashboard')->with('success', 'Solicitud registrada exitosamente.');
@@ -483,6 +508,16 @@ class SolicitudController extends Controller
             'direccion_habitacion' => 'required|string',
             'punto_referencia' => 'nullable|string',
             'tipo_ente' => 'required|integer|exists:tipos_entes,CodTipoEnte',
+
+
+            'codigo_interno' => [
+                'required', 
+                'string', 
+                'max:100',
+                // Verifica que sea único en la tabla, ignorando el actual sjcjcnaskjkjsai
+                Rule::unique('relacion_correspondencia', 'CodigoInterno')->ignore($solicitud->correspondencia->CodigoInterno, 'CodigoInterno')
+            ],
+
         ]);
 
         DB::beginTransaction();
@@ -515,13 +550,22 @@ class SolicitudController extends Controller
 
             ]);
 
-            if ($solicitud->correspondencia) {
+          if ($solicitud->correspondencia) {
                 $solicitud->correspondencia->update([
+                    'CodigoInterno' => $validatedData['codigo_interno'], 
                     'Descripcion' => $validatedData['descripcion'],
                     'Municipio_FK' => $solicitud->persona->parroquia->Municipio_FK,
                     'TipoEnte_FK' => $validatedData['tipo_ente'],
                 ]);
             }
+
+\App\Models\Bitacora::registrar(
+                'Editar', 
+                'Solicitudes', 
+                $solicitud->CodSolicitud, 
+                $solicitud->Nro_UAC,
+                "Actualización de datos del solicitante."
+            );
 
             DB::commit();
             return redirect()->route('solicitudes.show', $solicitud->CodSolicitud)->with('success', 'Datos actualizados.');
@@ -580,6 +624,15 @@ class SolicitudController extends Controller
                     'StatusSolicitud_FK' => 7, 
                     'Observacion' => $solicitud->correspondencia->Observacion . "\n[ANULADA por " . auth()->user()->NombreUsuario . " el " . now() . "]",
                 ]);
+
+
+                \App\Models\Bitacora::registrar(
+                    'Anular',                     
+                    'Solicitudes',                  
+                    $solicitud->CodSolicitud,       
+                    $solicitud->Nro_UAC,           
+                    "SE ANULÓ LA SOLICITUD."   
+                );
             }
             return redirect()->route('dashboard')->with('success', 'Solicitud anulada.');
         } catch (\Exception $e) {
@@ -823,6 +876,16 @@ public function subirArchivo(Request $request, $id)
                     'tamano_archivo' => $file->getSize(),
                 ]);
             }
+
+// REGISTRAR EN BITÁCORA
+            \App\Models\Bitacora::registrar(
+                'Subir Archivo',
+                'Archivos',
+                $solicitud->CodSolicitud,
+                $solicitud->Nro_UAC, // <--- ¡ESTO FALTABA!
+                "Se adjuntaron nuevos documentos a la solicitud."
+            );
+
             return back()->with('success', 'Archivos cargados correctamente.');
         }
 
@@ -833,20 +896,36 @@ public function subirArchivo(Request $request, $id)
 
 public function eliminarArchivo($id)
     {
-        $archivo = \App\Models\ArchivoSolicitud::findOrFail($id);
+      // 1. Buscamos el archivo y cargamos la solicitud padre
+        $archivo = \App\Models\ArchivoSolicitud::with('solicitud')->findOrFail($id);
         
-        // Verificar si la solicitud padre está anulada (opcional)
+        // Validar que no esté anulada
         if ($archivo->solicitud->correspondencia && $archivo->solicitud->correspondencia->StatusSolicitud_FK == 7) {
             return back()->with('error', 'No se puede eliminar archivos de una solicitud anulada.');
         }
 
-        // 1. Eliminar el archivo físico del disco
+        // 2. Guardamos datos clave EN VARIABLES TEMPORALES antes de borrar el registro
+        $nombreArchivo = $archivo->nombre_original;
+        $idSolicitud   = $archivo->solicitud->CodSolicitud;
+        $uacSolicitud  = $archivo->solicitud->Nro_UAC;
+
+        // 3. Eliminar el archivo físico
         if (Storage::disk('public')->exists($archivo->ruta_archivo)) {
             Storage::disk('public')->delete($archivo->ruta_archivo);
         }
 
-        // 2. Eliminar registro de la BD
+        // 4. Eliminar el registro de la BD
         $archivo->delete();
+
+
+        // 5. REGISTRAR EN BITÁCORA (Usando las variables guardadas)
+        \App\Models\Bitacora::registrar(
+            'Eliminar Archivo',           
+            'Solicitudes',                
+            $idSolicitud,                
+            $uacSolicitud,         
+            "Se eliminó el documento adjunto: {$nombreArchivo}"
+        );
 
         return back()->with('success', 'Archivo eliminado correctamente.');
     }
