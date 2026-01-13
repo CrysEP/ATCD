@@ -153,7 +153,7 @@
     </div>
                         <div class="col-md-3">
                             <label for="nro_uac" class="form-label">Nro. UAC:</label>
-                            <input type="text" class="form-control" id="nro_uac" name="nro_uac" value="{{ old('nro_uac') }}" maxlength="10" placeholder="UAC-XXXXX" required title="Ingrese el código asignado la Unidad de Atención al Ciudadano">
+                            <input type="text" class="form-control" id="nro_uac" name="nro_uac" value="{{ old('nro_uac') }}" maxlength="10" placeholder="UAC-XXXXX"  title="Ingrese el código asignado la Unidad de Atención al Ciudadano">
                         </div>
                         <div class="col-md-3">
                             <label for="tipo_solicitante" class="form-label">Tipo de Solicitante:</label>

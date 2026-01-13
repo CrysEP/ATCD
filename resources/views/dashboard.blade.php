@@ -113,6 +113,36 @@
     </div>
 </div>
 
+
+        {{-- Filtro Código Interno --}}
+        <div class="col-md-3">
+            <label class="form-label fw-bold small text-muted">Código Interno</label>
+            <input type="text" class="form-control" name="codigo_interno" 
+                   value="{{ request('codigo_interno') }}" placeholder="Ej: CO-0005">
+        </div>
+
+        {{-- Filtro Nro UAC --}}
+        <div class="col-md-3">
+            <label class="form-label fw-bold small text-muted">Nro. UAC</label>
+            <input type="text" class="form-control" name="nro_uac" 
+                   value="{{ request('nro_uac') }}" placeholder="Ej: UAC-123">
+        </div>
+
+        {{-- Filtro Municipio --}}
+        <div class="col-md-3">
+            <label class="form-label fw-bold small text-muted">Municipio</label>
+            <select class="form-select" name="municipio_id">
+                <option value="">-- Todos --</option>
+                @foreach($municipios as $m)
+                    <option value="{{ $m->CodMunicipio }}" {{ request('municipio_id') == $m->CodMunicipio ? 'selected' : '' }}>
+                        {{ $m->NombreMunicipio }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+
+
                     <div class="mb-3">
                         <label for="urgencia" class="form-label">Urgencia</label>
                         <select name="urgencia" id="urgencia" class="form-select">

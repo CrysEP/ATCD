@@ -43,6 +43,28 @@ class HistorialExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
         if (!empty($this->filtros['fecha_hasta'])) {
             $query->whereDate('FechaSolicitud', '<=', $this->filtros['fecha_hasta']);
         }
+
+
+        // 1. Municipio
+        if (!empty($this->filtros['municipio_id'])) {
+            $query->whereHas('persona.parroquia', function ($q) {
+                $q->where('Municipio_FK', $this->filtros['municipio_id']);
+            });
+        }
+
+        // 2. Código Interno
+        if (!empty($this->filtros['codigo_interno'])) {
+            $query->whereHas('correspondencia', function ($q) {
+                $q->where('CodigoInterno', 'like', "%{$this->filtros['codigo_interno']}%");
+            });
+        }
+
+        // 3. Nro UAC
+        if (!empty($this->filtros['nro_uac'])) {
+            $query->where('Nro_UAC', 'like', "%{$this->filtros['nro_uac']}%");
+        }
+
+
         if (!empty($this->filtros['search'])) {
             $search = $this->filtros['search'];
             $query->where(function($q) use ($search) {

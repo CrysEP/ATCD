@@ -167,12 +167,24 @@
                     {{-- QR GENERADO --}}
                     {{-- API pública para generar el QR sin instalar librerías extras, por ahora --}}
                     {{-- El contenido del QR es el ID de la solicitud para futuro rastreo --}}
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ route('solicitudes.show', $solicitud->CodSolicitud) }}" 
-                         style="width: 70px; height: 70px;" alt="QR">
-                    
-                    <div style="font-size: 7px; margin-top: 4px; color: #555;">
-                        ESCANEE PARA<br>VER ESTATUS
-                    </div>
+                    <!-- <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ route('solicitudes.show', $solicitud->CodSolicitud) }}" 
+                         style="width: 70px; height: 70px;" alt="QR"> -->
+
+                         {{-- SECCIÓN DEL CÓDIGO QR --}}
+    <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 10px;">
+        
+        {{-- Generamos el QR del Nro_UAC --}}
+        {{-- Usamos base64 para que el PDF lo pueda renderizar sin problemas --}}
+        <img src="data:image/svg+xml;base64,{{ base64_encode(SimpleSoftwareIO\QrCode\Facades\QrCode::size(100)->generate("UAC: " . $solicitud->Nro_UAC . "\n" . "Estado: " . ($solicitud->correspondencia->status->NombreStatusSolicitud ?? 'N/A'))) }}" alt="QR">
+        
+        <div style="font-size: 10px; margin-top: 5px; color: #555;">
+            <strong>{{ $solicitud->Nro_UAC }}</strong>
+        </div>
+        <div style="font-size: 8px; color: #777;">
+            Escanee para validar
+        </div>
+    </div>
+                
 
                 </td>
             </tr>

@@ -16,8 +16,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Exports\HistorialExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\HistorialExport;
+
 
 
 
@@ -25,6 +26,8 @@ class SolicitudController extends Controller
 {
     public function index(Request $request)
     {
+        $municipios = Municipio::orderBy('NombreMunicipio')->get();
+
         $query = Solicitud::query();
 
         $query->whereHas('correspondencia', function ($q) {
@@ -37,17 +40,29 @@ class SolicitudController extends Controller
         if ($request->filled('urgencia')) {
             $query->where('NivelUrgencia', $request->urgencia);
         }
-        if ($request->filled('municipio')) {
+        if ($request->filled('municipio_id')) {
             $query->whereHas('persona.parroquia.municipio', function ($q) use ($request) {
-                $q->where('CodMunicipio', $request->municipio);
+                $q->where('CodMunicipio', $request->municipio_id);
             });
         }
+
+        if ($request->filled('codigo_interno')) {
+            $query->whereHas('correspondencia', function ($q) use ($request) {
+                $q->where('CodigoInterno', 'like', "%{$request->codigo_interno}%");
+            });}
+
+
+        if ($request->filled('nro_uac')) {
+            $query->where('Nro_UAC', 'like', "%{$request->nro_uac}%");
+        }
+
         if ($request->filled('fecha_desde')) {
             $query->whereDate('FechaSolicitud', '>=', $request->fecha_desde);
         }
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('FechaSolicitud', '<=', $request->fecha_hasta);
         }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -58,8 +73,11 @@ class SolicitudController extends Controller
                                 ->orWhere('ApellidosPersona', 'like', "%{$search}%")
                                 ->orWhere('CedulaPersona', 'like', "%{$search}%");
                   });
-            });
-        }
+            });  }
+
+            
+
+
 
         $solicitudes = $query->with(['persona.parroquia.municipio', 'correspondencia.status'])
                              ->orderBy('FechaSolicitud', 'desc')
@@ -72,7 +90,7 @@ class SolicitudController extends Controller
             })
             ->count();
 
-        return view('dashboard', compact('solicitudes'));
+        return view('dashboard', compact('solicitudes', 'municipios'));
     }
 
     public function create()
@@ -580,6 +598,8 @@ $anioActual = now()->year;
 
     public function history(Request $request)
     {
+        $municipios = Municipio::orderBy('NombreMunicipio')->get();
+
         $query = Solicitud::whereHas('correspondencia', function ($q) {
             $q->where('StatusSolicitud_FK', '!=', 1)->where('StatusSolicitud_FK', '!=', 7); 
         });
@@ -593,6 +613,22 @@ $anioActual = now()->year;
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('FechaSolicitud', '<=', $request->fecha_hasta);
         }
+
+        
+        if ($request->filled('municipio_id')) {
+            $query->whereHas('persona.parroquia', function ($q) use ($request) {
+                $q->where('Municipio_FK', $request->municipio_id);
+            });
+        }
+        if ($request->filled('codigo_interno')) {
+            $query->whereHas('correspondencia', function ($q) use ($request) {
+                $q->where('CodigoInterno', 'like', "%{$request->codigo_interno}%");
+            });
+        }
+        if ($request->filled('nro_uac')) {
+            $query->where('Nro_UAC', 'like', "%{$request->nro_uac}%");
+        }
+    
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -614,7 +650,7 @@ $anioActual = now()->year;
                              ->orderBy('FechaSolicitud', 'desc')
                              ->paginate(20);
 
-        return view('solicitudes.history', compact('solicitudes'));
+        return view('solicitudes.history', compact('solicitudes', 'municipios'));
     }
 
     public function anular($id)
@@ -860,24 +896,29 @@ $anioActual = now()->year;
 /** Se supone que genera el código UAC con formato UAC-00001. Se reinicia anualmente buscando solo en el año actual.*/
  private function generarProximoUAC()
     {
-        $anioActual = date('Y');
+      $anioActual = date('Y');
 
-        // Busca la última solicitud DE ESTE AÑO que tenga UAC
+        // 1. Buscamos la última solicitud creada ESTE AÑO que tenga UAC
         $ultimaSolicitud = Solicitud::whereYear('FechaSolicitud', $anioActual)
-                            ->whereNotNull('Nro_UAC')
-                            ->orderBy('CodSolicitud', 'desc')
-                            ->first();
+                                    ->whereNotNull('Nro_UAC')
+                                    ->orderBy('CodSolicitud', 'desc')
+                                    ->first();
 
+        // 2. Si no hay solicitudes este año, comenzamos la serie
         if (!$ultimaSolicitud) {
-            return 'UAC-00001'; // Es el primero del año
+            return 'UAC-00001-' . $anioActual;
         }
 
-        // Extrae el número (ej: UAC-00045 -> 45)
-        $numeroString = substr($ultimaSolicitud->Nro_UAC, 4); 
-        $numero = intval($numeroString); 
+        // 3.
+        // Formato Viejo: UAC-00045       -> partes[0]=UAC, partes[1]=00045
+        // Formato Nuevo: UAC-00045-2025  -> partes[0]=UAC, partes[1]=00045, partes[2]=2025
+        $partes = explode('-', $ultimaSolicitud->Nro_UAC);
+        
+        // Tomamos siempre la segunda parte (el número)
+        $numero = isset($partes[1]) ? intval($partes[1]) : 0;
 
-        // Suma 1 y rellena con ceros (46 -> UAC-00046)
-        return 'UAC-' . str_pad($numero + 1, 5, '0', STR_PAD_LEFT);
+        // 4. Generamos el siguiente código agregando el año al final
+        return 'UAC-' . str_pad($numero + 1, 5, '0', STR_PAD_LEFT) . '-' . $anioActual;
     }
 
 
@@ -1037,6 +1078,23 @@ public function verArchivo($id)
         if ($request->filled('fecha_hasta')) {
             $query->whereDate('FechaSolicitud', '<=', $request->fecha_hasta);
         }
+
+
+        if ($request->filled('municipio_id')) {
+            $query->whereHas('persona.parroquia', function ($q) use ($request) {
+                $q->where('Municipio_FK', $request->municipio_id);
+            });
+        }
+        if ($request->filled('codigo_interno')) {
+            $query->whereHas('correspondencia', function ($q) use ($request) {
+                $q->where('CodigoInterno', 'like', "%{$request->codigo_interno}%");
+            });
+        }
+        if ($request->filled('nro_uac')) {
+            $query->where('Nro_UAC', 'like', "%{$request->nro_uac}%");
+        }
+
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
