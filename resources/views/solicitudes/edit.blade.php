@@ -6,6 +6,7 @@
 <div class="row justify-content-center">
     <div class="col-lg-10">
         
+        {{-- FORMULARIO PRINCIPAL DE EDICIÓN DE DATOS --}}
         <form method="POST" action="{{ route('solicitudes.update', $solicitud->CodSolicitud) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
@@ -29,7 +30,7 @@
                 </div>
             @endif
 
-            {{-- 1. Datos del Solicitante --}}
+            {{-- 1. DATOS DEL SOLICITANTE --}}
             <div class="card card-gradient-body shadow-sm mb-4 border-0">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0">1. Datos del Solicitante</h5>
@@ -68,7 +69,7 @@
                                    maxlength="100" oninput="this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '')">
                         </div>
 
-                        {{-- GÉNERO (NUEVO) --}}
+                        {{-- GÉNERO --}}
                         <div class="col-md-3">
                             <label for="sexo" class="form-label">Género *</label>
                             <select class="form-select" id="sexo" name="sexo" required>
@@ -77,7 +78,7 @@
                             </select>
                         </div>
 
-                        {{-- FECHA NACIMIENTO (NUEVO) --}}
+                        {{-- FECHA NACIMIENTO --}}
                         <div class="col-md-3">
                             <label for="fecha_nacimiento" class="form-label">Fecha Nacimiento *</label>
                             <input type="date" class="form-control" name="fecha_nacimiento" 
@@ -98,7 +99,7 @@
                                    value="{{ old('email', $solicitud->persona->CorreoElectronicoPersona) }}" maxlength="200">
                         </div>
 
-                        {{-- DIRECCIÓN (NUEVO) --}}
+                        {{-- DIRECCIÓN --}}
                         <div class="col-12">
                             <label for="direccion_habitacion" class="form-label">Dirección de Habitación *</label>
                             <textarea class="form-control" id="direccion_habitacion" name="direccion_habitacion" rows="2" >{{ old('direccion_habitacion', $solicitud->DirecciónHabitación) }}</textarea>
@@ -142,7 +143,7 @@
                 </div>
             </div>
 
-            {{-- 2. Detalles de la Solicitud --}}
+            {{-- 2. DETALLES DE LA SOLICITUD --}}
             <div class="card card-gradient-body shadow-sm mb-4 border-0">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0">2. Detalles de la Solicitud</h5>
@@ -150,7 +151,7 @@
                 <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label">Fecha y Hora (Planilla):</label>
+                            <label class="form-label">Fecha y Hora (Creación):</label>
                             <input type="datetime-local" class="form-control" name="fecha_solicitud" 
                                    value="{{ old('fecha_solicitud', $solicitud->FechaSolicitud->format('Y-m-d\TH:i')) }}" required>
                         </div>
@@ -160,14 +161,12 @@
                                    value="{{ old('fecha_atencion', \Carbon\Carbon::parse($solicitud->FechaAtención)->format('Y-m-d\TH:i')) }}" required>
                         </div>
                         
-
-<div class="col-md-3">
-    <label class="form-label">Código Interno (Expediente):</label>
-    <input type="text" class="form-control" name="codigo_interno" 
-           value="{{ old('codigo_interno', $solicitud->correspondencia->CodigoInterno) }}" 
-           required maxlength="100">
-</div>
-
+                        <div class="col-md-3">
+                            <label class="form-label">Código Interno:</label>
+                            <input type="text" class="form-control" name="codigo_interno" 
+                                   value="{{ old('codigo_interno', $solicitud->correspondencia->CodigoInterno) }}" 
+                                   required maxlength="100">
+                        </div>
 
                         <div class="col-md-3">
                             <label class="form-label">Nro. UAC:</label>
@@ -221,6 +220,7 @@
                 </div>
             </div>
 
+            {{-- BOTONES DE GUARDADO --}}
             <div class="d-flex justify-content-center gap-3 mb-4">
                 <a href="{{ route('solicitudes.show', $solicitud->CodSolicitud) }}" class="btn btn-secondary btn-lg">Cancelar</a>
                 <button type="submit" class="btn btn-primary btn-lg">Guardar Cambios</button>
@@ -228,87 +228,100 @@
         </form>
 
 
-<hr class="my-5">
+        <hr class="my-5">
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-secondary text-white">
-        <h5 class="mb-0"><i class="bi bi-paperclip"></i> Gestión de Archivos Adjuntos</h5>
-    </div>
-    <div class="card-body">
-        
-        {{-- 1. LISTA DE ARCHIVOS EXISTENTES --}}
-        @if($solicitud->archivos->count() > 0)
-            <h6 class="fw-bold">Archivos Actuales:</h6>
-            <div class="table-responsive mb-4">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nombre del Archivo</th>
-                            <th>Tipo</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($solicitud->archivos as $archivo)
-                            <tr>
-                                <td>
-                                    <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" target="_blank" class="text-decoration-none">
-                                        <i class="bi bi-file-earmark-text"></i> {{ $archivo->nombre_original }}
-                                    </a>
-                                </td>
-                                <td>{{ $archivo->tipo_archivo }}</td>
-                                <td style="width: 150px;">
-                                    {{-- Botón Eliminar --}}
-                                    <form action="{{ route('archivos.eliminar', $archivo->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este archivo? Esta acción es irreversible.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i> Eliminar
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        {{-- SECCIÓN GESTIÓN DE ARCHIVOS --}}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-paperclip"></i> Gestión de Archivos Adjuntos</h5>
             </div>
-        @else
-            <div class="alert alert-info">
-                No hay archivos adjuntos en esta solicitud.
-            </div>
-        @endif
+            <div class="card-body">
+                
+                {{-- 1. LISTA DE ARCHIVOS EXISTENTES --}}
+                @if($solicitud->archivos->count() > 0)
+                    <h6 class="fw-bold">Archivos Actuales:</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre del Archivo</th>
+                                    <th>Tipo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($solicitud->archivos as $archivo)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" target="_blank" class="text-decoration-none">
+                                                <i class="bi bi-file-earmark-text"></i> {{ $archivo->nombre_original }}
+                                            </a>
+                                        </td>
+                                        <td>{{ $archivo->tipo_archivo }}</td>
+                                        <td>
+                                            <div class="d-flex gap-4">
+                                                
+                                                {{-- BOTÓN PREVISUALIZAR --}}
+                                                @if(in_array($archivo->tipo_archivo, ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']))
+                                                    <button type="button" class="btn btn-sm btn-info text-white" 
+                                                            onclick="abrirModalPreview(this)"
+                                                            data-url="{{ route('solicitudes.verArchivo', $archivo->id) }}"
+                                                            data-tipo="{{ $archivo->tipo_archivo }}"
+                                                            data-nombre="{{ $archivo->nombre_original }}">
+                                                        <i class="bi bi-eye-fill"></i> Ver
+                                                    </button>
+                                                @else
+                                                    <span class="badge bg-secondary">Vista no disponible</span>
+                                                @endif
 
-        {{-- 2. FORMULARIO PARA SUBIR NUEVOS --}}
-        <div class="p-3 border rounded bg-light">
-            <h6 class="fw-bold mb-3"><i class="bi bi-cloud-upload"></i> Subir Nuevos Archivos</h6>
-            
-            {{-- NOTA: Este form es independiente del form principal de editar datos --}}
-            <form action="{{ route('solicitudes.subirArchivo', $solicitud->CodSolicitud) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="row align-items-end">
-                    <div class="col-md-9">
-                        <label for="nuevos_archivos" class="form-label">Seleccionar documentos (PDF, Imágenes, Excel)</label>
-                        <input type="file" class="form-control" name="nuevos_archivos[]" id="nuevos_archivos" multiple accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx">
+                                                {{-- BOTÓN ELIMINAR --}}
+                                                <form action="{{ route('archivos.eliminar', $archivo->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este archivo? Esta acción es irreversible.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i> Eliminar
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="col-md-3 mt-3 mt-md-0">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-upload"></i> Cargar Archivos
-                        </button>
+                @else
+                    <div class="alert alert-info">
+                        No hay archivos adjuntos en esta solicitud.
                     </div>
+                @endif
+
+                {{-- 2. FORMULARIO PARA SUBIR NUEVOS --}}
+                <div class="p-3 border rounded bg-light">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-cloud-upload"></i> Subir Nuevos Archivos</h6>
+                    
+                    <form action="{{ route('solicitudes.subirArchivo', $solicitud->CodSolicitud) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="row align-items-end">
+                            <div class="col-md-9">
+                                <label for="nuevos_archivos" class="form-label">Seleccionar documentos (PDF, Imágenes, Excel)</label>
+                                <input type="file" class="form-control" name="nuevos_archivos[]" id="nuevos_archivos" multiple accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx">
+                            </div>
+                            <div class="col-md-3 mt-3 mt-md-0">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-upload"></i> Cargar Archivos
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
-        </div>
 
+            </div>
+        </div>
 
     </div>
 </div>
 
-
-
-
-
-
-
+{{-- SCRIPT PARA MUNICIPIOS/PARROQUIAS --}}
 <script>
     const municipiosData = @json($municipios);
     const municipioSelect = document.getElementById('municipio_id');
@@ -330,4 +343,80 @@
         }
     });
 </script>
+
+{{-- === MODAL DE PREVISUALIZACIÓN === --}}
+<div class="modal fade" id="modalPrevisualizacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered"> 
+        <div class="modal-content" style="height: 90vh;"> 
+            <div class="modal-header bg-light py-2">
+                <h6 class="modal-title fw-bold" id="tituloArchivo">Vista Previa</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 bg-discord d-flex justify-content-center align-items-center" style="overflow: hidden;">
+                {{-- Visor PDF --}}
+                <iframe id="visorPDF" src="" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+                {{-- Visor Imagen --}}
+                <img id="visorImagen" src="" class="img-fluid" style="max-height: 100%; max-width: 100%; display: none;" alt="Vista previa">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- SCRIPT PARA LA PREVISUALIZACIÓN --}}
+<script>
+    // Variable global para la instancia del modal
+    let modalPreviewInstance = null;
+
+    function abrirModalPreview(boton) {
+        // 1. Obtener datos del botón (seguro contra caracteres extraños)
+        const url = boton.getAttribute('data-url');
+        const tipo = boton.getAttribute('data-tipo');
+        const nombre = boton.getAttribute('data-nombre');
+
+        // 2. Asignar título
+        document.getElementById('tituloArchivo').textContent = nombre;
+
+        // 3. Referencias a elementos
+        const iframe = document.getElementById('visorPDF');
+        const img = document.getElementById('visorImagen');
+        
+        // 4. Resetear visualización
+        iframe.style.display = 'none';
+        iframe.src = ''; 
+        img.style.display = 'none';
+        img.src = '';
+
+        // 5. Cargar contenido según tipo
+        if (tipo === 'application/pdf') {
+            iframe.src = url;
+            iframe.style.display = 'block';
+        } else {
+            // Imágenes
+            img.src = url;
+            img.style.display = 'block';
+        }
+
+        // 6. Abrir Modal (Manejo correcto de instancia Bootstrap 5)
+        const modalEl = document.getElementById('modalPrevisualizacion');
+        
+        if (!modalPreviewInstance) {
+            modalPreviewInstance = new bootstrap.Modal(modalEl);
+        }
+        modalPreviewInstance.show();
+    }
+    
+    // Limpiar src al cerrar
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalEl = document.getElementById('modalPrevisualizacion');
+        if(modalEl){
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                document.getElementById('visorPDF').src = '';
+                document.getElementById('visorImagen').src = '';
+            });
+        }
+    });
+</script>
+
 @endsection

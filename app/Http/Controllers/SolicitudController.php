@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\HistorialExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 
@@ -759,18 +761,45 @@ $anioActual = now()->year;
                 }
             }
 
-            // B. Generar el Resumen Ejecutivo (.docx)
+            // B. Generar el Resumen (.docx)
             $phpWord = new \PhpOffice\PhpWord\PhpWord();
             $section = $phpWord->addSection();
 
+            // === 1. LOGOS EN EL ENCABEZADO ===
+            $header = $section->addHeader();
+            $headerTable = $header->addTable();
+            $headerTable->addRow();
+
+            // Celda Izquierda (Logo Corporación)
+            $leftCell = $headerTable->addCell(4500);
+            // Asegúrate que la imagen exista en public/images/logo.png
+            if (file_exists(public_path('images/logo_corpointa.png'))) {
+                $leftCell->addImage(public_path('images/logo_corpointa.png'), [
+                    'width' => 140, 
+                    'height' => 50, 
+                    'align' => 'left'
+                ]);
+            }
+
+            // Celda Derecha (Segundo Logo opcional, ej: Gobernación)
+            // Si solo tienes uno, puedes borrar este bloque o dejarlo vacío
+            $rightCell = $headerTable->addCell(4500);
+            if (file_exists(public_path('images/Gobernación_logo.jpg'))) {
+                $rightCell->addImage(public_path('images/Gobernación_logo.jpg'), [
+                    'width' => 140, 
+                    'height' => 50, 
+                    'align' => 'right'
+                ]);
+            }
+
             // Estilos
-            $headerStyle = ['bold' => true, 'size' => 16, 'color' => '1F497D']; // Azul Institucional
+            $headerStyle = ['bold' => true, 'size' => 16, 'color' => '1F497D']; 
             $subHeaderStyle = ['bold' => true, 'size' => 12, 'marginTop' => 200];
             $tableStyle = ['borderSize' => 6, 'borderColor' => '999999', 'cellMargin' => 50];
             $phpWord->addTableStyle('StatsTable', $tableStyle);
 
             // Título
-            $section->addText('Resumen Ejecutivo de Solicitudes Procesadas', $headerStyle);
+            $section->addText('Resumen de Solicitudes Procesadas', $headerStyle);
             $section->addText('Período: ' . \Carbon\Carbon::parse($request->fecha_desde_export)->format('d/m/Y') . ' al ' . \Carbon\Carbon::parse($request->fecha_hasta_export)->format('d/m/Y'));
             $section->addText('Total Documentos en este reporte: ' . $solicitudes->count(), ['italic' => true]);
             $section->addTextBreak(1);
@@ -882,7 +911,7 @@ public function subirArchivo(Request $request, $id)
                 'Subir Archivo',
                 'Archivos',
                 $solicitud->CodSolicitud,
-                $solicitud->Nro_UAC, // <--- ¡ESTO FALTABA!
+                $solicitud->Nro_UAC,
                 "Se adjuntaron nuevos documentos a la solicitud."
             );
 
@@ -956,5 +985,84 @@ public function eliminarArchivo($id)
         return $pdf->stream('Ticket-UAC-' . ($solicitud->Nro_UAC ?? 'Temp') . '.pdf');
     }
 
+
+    /** Muestra el archivo en el navegador (Previsualización) */
+public function verArchivo($id)
+    {
+        $archivo = \App\Models\ArchivoSolicitud::findOrFail($id);
+        
+        // 1. Verificar existencia usando el driver configurado
+        if (!Storage::disk('public')->exists($archivo->ruta_archivo)) {
+            abort(404, 'Archivo no encontrado en el almacenamiento.');
+        }
+
+        // 2. Obtener la ruta ABSOLUTA del sistema de forma segura
+        // Esto devuelve algo como: C:\xampp\htdocs\proyecto\storage\app\public\solicitudes\archivo.pdf
+        $path = Storage::disk('public')->path($archivo->ruta_archivo);
+
+        // 3. Servir el archivo forzando las cabeceras correctas
+        return response()->file($path, [
+            'Content-Type' => $archivo->tipo_archivo,
+            'Content-Disposition' => 'inline; filename="' . $archivo->nombre_original . '"'
+        ]);
+    }
+
+
+    /** Exportar Historial filtrado a Excel*/
+    public function exportarHistorialExcel(Request $request)
+    {
+        // Pasamos todos los parámetros del request (filtros) al constructor del Export
+        return Excel::download(new HistorialExport($request->all()), 'Historial_Solicitudes_' . now()->format('d-m-Y') . '.xlsx');
+    }
+
+
+    /**
+     * Exportar Historial filtrado a PDF
+     */
+    public function exportarHistorialPdf(Request $request)
+    {
+        // 1. Reutilizamos la lógica de filtros para obtener la misma data que ves en pantalla
+        $query = Solicitud::query()->whereHas('correspondencia', function ($q) {
+            $q->where('StatusSolicitud_FK', '!=', 1)
+              ->where('StatusSolicitud_FK', '!=', 7); 
+        });
+
+        // Filtros (Iguales que en el Excel y la Vista)
+        if ($request->filled('urgencia')) {
+            $query->where('NivelUrgencia', $request->urgencia);
+        }
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('FechaSolicitud', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('FechaSolicitud', '<=', $request->fecha_hasta);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('Nro_UAC', 'like', "%{$search}%")
+                  ->orWhere('DescripcionSolicitud', 'like', "%{$search}%")
+                  ->orWhereHas('persona', function ($q_persona) use ($search) {
+                      $q_persona->where('NombresPersona', 'like', "%{$search}%")
+                                ->orWhere('ApellidosPersona', 'like', "%{$search}%")
+                                ->orWhere('CedulaPersona', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('correspondencia', function ($q_corr) use ($search) {
+                      $q_corr->where('CodigoInterno', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Obtenemos los datos (get) en lugar de paginar
+        $solicitudes = $query->orderBy('FechaSolicitud', 'desc')->get();
+
+        // 2. Generamos el PDF
+        $pdf = Pdf::loadView('solicitudes.pdf_historial', compact('solicitudes'));
+        
+        // Orientación Vertical (Portrait) como pediste
+        $pdf->setPaper('letter', 'portrait');
+
+        return $pdf->stream('Listado_Solicitudes_' . now()->format('d-m-Y') . '.pdf');
+    }
 
 }

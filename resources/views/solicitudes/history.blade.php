@@ -113,10 +113,26 @@
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
                                 <a href="{{ route('solicitudes.history') }}" class="btn btn-outline-secondary">Limpiar</a>
+
+
+                                  {{-- BOTÓN NUEVO: EXPORTAR EXCEL --}}
+                                {{-- request()->query() mantiene los filtros actuales en el enlace --}}
+                                     <a href="{{ route('solicitudes.exportarHistorial', request()->query()) }}" class="btn btn-success text-white">
+                                            <i class="bi bi-file-earmark-excel"></i> Exportar Listado de solicitudes (Excel)
+                                        </a>
+
+                                           <a href="{{ route('solicitudes.exportarHistorialPdf', request()->query()) }}" class="btn btn-danger text-white" target="_blank">
+                                    <i class="bi bi-file-earmark-pdf"></i> Exportar Listado de solicitudes (PDF)
+                                        </a>
+
                             </div>
+                          
+
                 </form>
             </div>
         </div>
+
+        
         <div class="card shadow-sm border-0 mt-3 position-sticky" style="top: 22rem;">
         <div class="card-header bg-dark  text-white">
             <h5 class="mb-0"><i class="bi bi-file-earmark-zip"></i> Descarga de solicitudes procesadas</h5>

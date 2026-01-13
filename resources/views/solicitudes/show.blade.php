@@ -161,7 +161,7 @@
 </a>
     
 </div><br>
-            {{-- 3. Archivos --}}
+         {{-- 3. Archivos --}}
             <div class="card card-gradient-body shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
                     <h5 class="mb-0">3. Archivos Adjuntos</h5>
@@ -170,23 +170,51 @@
                     @if($solicitud->archivos->count() > 0)
                         <ul class="list-group">
                             @foreach($solicitud->archivos as $archivo)
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" class="text-decoration-none" title="Descargar">
-                                    <i class="bi bi-file-earmark-text me-2"></i> {{ $archivo->nombre_original }}
-                                </a>
-                                <span class="text-muted small">{{ number_format($archivo->tamano_archivo / 1024, 2) }} KB</span>
+                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                                
+                                {{-- Nombre del Archivo y Peso --}}
+                                <div class="text-truncate me-3" style="max-width: 60%;">
+                                    <i class="bi bi-file-earmark-text-fill text-primary me-2"></i> 
+                                    <span class="fw-bold text-dark">{{ $archivo->nombre_original }}</span>
+                                    <small class="text-muted ms-2">({{ number_format($archivo->tamano_archivo / 1024, 2) }} KB)</small>
+                                </div>
+
+                                {{-- Botones de Acción (Ver y Descargar) --}}
+                                <div class="d-flex gap-2 mt-2 mt-md-0">
+                                    
+                                    {{-- BOTÓN PREVISUALIZAR --}}
+                                    @if(in_array($archivo->tipo_archivo, ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']))
+                                        <button type="button" class="btn btn-sm btn-info text-white" 
+                                                onclick="abrirModalPreview(this)"
+                                                data-url="{{ route('solicitudes.verArchivo', $archivo->id) }}"
+                                                data-tipo="{{ $archivo->tipo_archivo }}"
+                                                data-nombre="{{ $archivo->nombre_original }}"
+                                                title="Vista Previa">
+                                            <i class="bi bi-eye-fill"></i> Ver
+                                        </button>
+                                    @endif
+
+                                    {{-- BOTÓN DESCARGAR --}}
+                                    <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" class="btn btn-sm btn-outline-primary" title="Descargar">
+                                        <i class="bi bi-download"></i> Descargar
+                                    </a>
+                                </div>
+
                             </li>
                             @endforeach
                         </ul>
                     @else
-                        <p class="text-muted mb-0">No hay archivos adjuntos para esta solicitud.</p>
+                        <div class="text-center py-3 text-muted">
+                            <i class="bi bi-folder-x fs-3 d-block mb-2"></i>
+                            No hay archivos adjuntos en esta solicitud.
+                        </div>
                     @endif
+                    </div>
                 </div>
             </div>
-        </div>
 
         
-
+<br> 
         {{-- Columna Derecha: Correspondencia y Acciones --}}
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 position-sticky" style="top: 1.5rem;">
@@ -375,4 +403,74 @@
             }
         }
     </script>
+
+
+{{-- === MODAL DE PREVISUALIZACIÓN === --}}
+<div class="modal fade" id="modalPrevisualizacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered"> 
+        <div class="modal-content" style="height: 90vh;"> 
+            <div class="modal-header bg-light py-2">
+                <h6 class="modal-title fw-bold" id="tituloArchivo">Vista Previa</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 bg-discord d-flex justify-content-center align-items-center" style="overflow: hidden;">
+                <iframe id="visorPDF" src="" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+                <img id="visorImagen" src="" class="img-fluid" style="max-height: 100%; max-width: 100%; display: none;" alt="Vista previa">
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Importar Bootstrap Bundle (Para asegurar que el Modal funcione) --}}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let modalPreviewInstance = null;
+
+    function abrirModalPreview(boton) {
+        // Obtener datos seguros
+        const url = boton.getAttribute('data-url');
+        const tipo = boton.getAttribute('data-tipo');
+        const nombre = boton.getAttribute('data-nombre');
+
+        // Configurar título y limpiar visualizadores
+        document.getElementById('tituloArchivo').textContent = nombre;
+        const iframe = document.getElementById('visorPDF');
+        const img = document.getElementById('visorImagen');
+        
+        iframe.style.display = 'none';
+        iframe.src = ''; 
+        img.style.display = 'none';
+        img.src = '';
+
+        // Mostrar el visor correcto
+        if (tipo === 'application/pdf') {
+            iframe.src = url;
+            iframe.style.display = 'block';
+        } else {
+            img.src = url;
+            img.style.display = 'block';
+        }
+
+        // Abrir Modal
+        const modalEl = document.getElementById('modalPrevisualizacion');
+        if (!modalPreviewInstance) {
+            modalPreviewInstance = new bootstrap.Modal(modalEl);
+        }
+        modalPreviewInstance.show();
+    }
+    
+    // Limpiar src al cerrar para detener carga
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('modalPrevisualizacion');
+        if(modalEl){
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                document.getElementById('visorPDF').src = '';
+                document.getElementById('visorImagen').src = '';
+            });
+        }
+    });
+</script>
+
+
 @endsection

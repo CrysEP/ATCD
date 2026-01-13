@@ -39,8 +39,10 @@ Route::middleware(['auth'])->group(function () {
     // Descargar Archivos
     Route::get('/solicitudes/archivo/{id}/descargar', [SolicitudController::class, 'downloadFile'])->name('solicitudes.downloadFile');
 
-    Route::get('/solicitudes/{id}/editar', [SolicitudController::class, 'edit'])->name('solicitudes.edit');
     Route::put('/solicitudes/{id}', [SolicitudController::class, 'update'])->name('solicitudes.update');
+
+    Route::get('/solicitudes/{id}/editar', [SolicitudController::class, 'edit'])->name('solicitudes.edit');
+
 
 
     // Ruta para anular (eliminación lógica)
@@ -63,6 +65,13 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/archivos/{id}/eliminar', [App\Http\Controllers\SolicitudController::class, 'eliminarArchivo'])->name('archivos.eliminar');
 
     Route::get('/solicitudes/{id}/ticket', [App\Http\Controllers\SolicitudController::class, 'generarTicket'])->name('solicitudes.ticket');
+
+    Route::get('/solicitudes/archivo/{id}/ver', [App\Http\Controllers\SolicitudController::class, 'verArchivo'])->name('solicitudes.verArchivo');
+    
+    Route::get('/solicitudes/historial/pdf', [SolicitudController::class, 'exportarHistorialPdf'])->name('solicitudes.exportarHistorialPdf');
+
+    Route::get('/solicitudes/historial/exportar', [App\Http\Controllers\SolicitudController::class, 'exportarHistorialExcel'])->name('solicitudes.exportarHistorial');
+
 });
 
 
