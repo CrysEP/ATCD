@@ -187,6 +187,98 @@ $municipiosAnio = DB::table('solicitudes')
 
 
 
+      
+      // 12. TRIMESTRALES POR MUNICIPIO
+        $trimestralesMunicipio = DB::table('solicitudes')
+            ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
+            ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
+            ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7)
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('municipios.NombreMunicipio', DB::raw('QUARTER(FechaSolicitud) as trimestre'), DB::raw('count(*) as total'))
+            ->groupBy('municipios.NombreMunicipio', 'trimestre')->orderBy('municipios.NombreMunicipio')->get();
+
+        $dataTrimestreMun = [];
+        foreach ($trimestralesMunicipio as $row) {
+            $mun = $row->NombreMunicipio;
+            if (!isset($dataTrimestreMun[$mun])) $dataTrimestreMun[$mun] = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+            $dataTrimestreMun[$mun][$row->trimestre] = $row->total;
+        }
+
+        // 13. TRIMESTRALES POR ENTE (Desglosado)
+        $trimestralesMunEnte = DB::table('solicitudes')
+            ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
+            ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
+            ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->join('tipos_entes', 'relacion_correspondencia.TipoEnte_FK', '=', 'tipos_entes.CodTipoEnte')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7)
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('municipios.NombreMunicipio', 'tipos_entes.NombreEnte', DB::raw('QUARTER(FechaSolicitud) as trimestre'), DB::raw('count(*) as total'))
+            ->groupBy('municipios.NombreMunicipio', 'tipos_entes.NombreEnte', 'trimestre')->orderBy('municipios.NombreMunicipio')->get();
+
+        $dataTrimestreMunEnte = [];
+        foreach ($trimestralesMunEnte as $row) {
+            $mun = $row->NombreMunicipio;
+            $ente = $row->NombreEnte;
+            if (!isset($dataTrimestreMunEnte[$mun])) $dataTrimestreMunEnte[$mun] = [];
+            if (!isset($dataTrimestreMunEnte[$mun][$ente])) $dataTrimestreMunEnte[$mun][$ente] = ['total' => 0];
+            $dataTrimestreMunEnte[$mun][$ente]['total'] += $row->total;
+        }
+
+        // 14. GLOBAL TRIMESTRES (La suma total que pediste)
+        $globalTrimestres = DB::table('solicitudes')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7)
+            ->whereYear('FechaSolicitud', $anio)
+            ->select(DB::raw('QUARTER(FechaSolicitud) as trimestre'), DB::raw('count(*) as total'))
+            ->groupBy('trimestre')
+            ->get();
+        
+        $dataGlobalTri = [0, 0, 0, 0];
+        foreach($globalTrimestres as $t) {
+            $dataGlobalTri[$t->trimestre - 1] = $t->total;
+        }
+
+    
+// === 15. (NUEVO) MENSUALES POR MUNICIPIO ===
+        $mensualesMunicipio = DB::table('solicitudes')
+            ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
+            ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
+            ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7)
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('municipios.NombreMunicipio', DB::raw('MONTH(FechaSolicitud) as mes'), DB::raw('count(*) as total'))
+            ->groupBy('municipios.NombreMunicipio', 'mes')->get();
+
+        $dataMensualMun = []; // [Municipio] => [1=>X, 2=>Y...]
+        foreach ($mensualesMunicipio as $row) {
+            if (!isset($dataMensualMun[$row->NombreMunicipio])) {
+                $dataMensualMun[$row->NombreMunicipio] = array_fill(1, 12, 0); // Inicializar 12 meses en 0
+            }
+            $dataMensualMun[$row->NombreMunicipio][$row->mes] = $row->total;
+        }
+
+        // === 16. (NUEVO) MENSUALES POR ENTE ===
+        $mensualesEnte = DB::table('solicitudes')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->join('tipos_entes', 'relacion_correspondencia.TipoEnte_FK', '=', 'tipos_entes.CodTipoEnte')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7)
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('tipos_entes.NombreEnte', DB::raw('MONTH(FechaSolicitud) as mes'), DB::raw('count(*) as total'))
+            ->groupBy('tipos_entes.NombreEnte', 'mes')->get();
+
+        $dataMensualEnte = []; // [Ente] => [1=>X, 2=>Y...]
+        foreach ($mensualesEnte as $row) {
+            if (!isset($dataMensualEnte[$row->NombreEnte])) {
+                $dataMensualEnte[$row->NombreEnte] = array_fill(1, 12, 0);
+            }
+            $dataMensualEnte[$row->NombreEnte][$row->mes] = $row->total;
+        }
+
+
 
         return view('estadisticas.index', compact(
             'solicitudesHoy',
@@ -199,7 +291,10 @@ $municipiosAnio = DB::table('solicitudes')
             'labelsMunAnio', 'dataMunAnio',
             'denunciasMes', 'quejasMes',
             'labelsUrgencia', 'dataUrgencia',
-            'labelsTipoSolicitante', 'dataTipoSolicitante'
+            'labelsTipoSolicitante', 'dataTipoSolicitante',
+            'dataTrimestreMun', 'dataTrimestreMunEnte', 'dataGlobalTri',
+            'dataMensualMun', 'dataMensualEnte'
+
         ));
     }
 
