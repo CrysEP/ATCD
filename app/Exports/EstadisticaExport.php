@@ -22,57 +22,97 @@ class EstadisticaExport implements FromView, ShouldAutoSize, WithTitle
         $this->anio = $anio;
     }
 
-    public function view(): View
+    /**
+     * Matriz General (Todas las solicitudes activas)
+     */
+    private function generarMatriz($anio, $mes = null, $trimestre = null)
     {
-        // 1. Municipios
-        $municipios = Municipio::orderBy('NombreMunicipio')->get();
-        
-        $conteosMun = DB::table('solicitudes')
+        $query = DB::table('solicitudes')
             ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
             ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
             ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
             ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
-            ->whereMonth('FechaSolicitud', $this->mes)
-            ->whereYear('FechaSolicitud', $this->anio)
-            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) 
-            ->select('municipios.CodMunicipio', DB::raw('count(*) as total'))
-            ->groupBy('municipios.CodMunicipio')
-            ->pluck('total', 'CodMunicipio');
+            ->join('tipos_entes', 'relacion_correspondencia.TipoEnte_FK', '=', 'tipos_entes.CodTipoEnte')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) // No anuladas
+            ->whereYear('FechaSolicitud', $anio);
 
-        $municipios->map(function ($mun) use ($conteosMun) {
-            $mun->total_mes = $conteosMun[$mun->CodMunicipio] ?? 0;
-            return $mun;
-        });
+        if ($mes) { $query->whereMonth('FechaSolicitud', $mes); }
+        if ($trimestre) { $query->whereRaw('QUARTER(FechaSolicitud) = ?', [$trimestre]); }
 
-        // 2. Entes
-        $entes = TipoEnte::all();
-        
-        $conteosEnte = DB::table('solicitudes')
+        $data = $query->select('municipios.CodMunicipio', 'tipos_entes.CodTipoEnte', DB::raw('count(*) as total'))
+            ->groupBy('municipios.CodMunicipio', 'tipos_entes.CodTipoEnte')->get();
+
+        $matriz = [];
+        foreach ($data as $row) {
+            $matriz[$row->CodMunicipio][$row->CodTipoEnte] = $row->total;
+        }
+        return $matriz;
+    }
+
+    /**
+     * NUEVO: Matriz filtrada por Estatus (Pendiente vs Procesado)
+     */
+    private function generarMatrizStatus($anio, $mes, $tipoStatus)
+    {
+        $query = DB::table('solicitudes')
+            ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
+            ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
+            ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
             ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
             ->join('tipos_entes', 'relacion_correspondencia.TipoEnte_FK', '=', 'tipos_entes.CodTipoEnte')
-            ->whereMonth('FechaSolicitud', $this->mes)
-            ->whereYear('FechaSolicitud', $this->anio)
-            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7)
-            ->select('tipos_entes.CodTipoEnte', DB::raw('count(*) as total'))
-            ->groupBy('tipos_entes.CodTipoEnte')
-            ->pluck('total', 'CodTipoEnte');
+            ->whereYear('FechaSolicitud', $anio)
+            ->whereMonth('FechaSolicitud', $mes);
 
-        $entes->map(function ($ente) use ($conteosEnte) {
-            $ente->total_mes = $conteosEnte[$ente->CodTipoEnte] ?? 0;
-            return $ente;
-        });
+        if ($tipoStatus === 'pendiente') {
+            // Solo Pendientes (Status 1)
+            $query->where('relacion_correspondencia.StatusSolicitud_FK', 1);
+        } else {
+            // Procesadas (Ni pendiente ni anulada)
+            $query->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 1)
+                  ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7);
+        }
+
+        $data = $query->select('municipios.CodMunicipio', 'tipos_entes.CodTipoEnte', DB::raw('count(*) as total'))
+            ->groupBy('municipios.CodMunicipio', 'tipos_entes.CodTipoEnte')->get();
+
+        $matriz = [];
+        foreach ($data as $row) {
+            $matriz[$row->CodMunicipio][$row->CodTipoEnte] = $row->total;
+        }
+        return $matriz;
+    }
+
+    public function view(): View
+    {
+        $municipios = Municipio::orderBy('NombreMunicipio')->get();
+        $entes = TipoEnte::orderBy('NombreEnte')->get();
+
+        // 1. Datos Generales (Ya existentes)
+        $matrizMensual = $this->generarMatriz($this->anio, $this->mes);
+        
+        // 2. NUEVO: Datos Desglosados por Estatus
+        $matrizPendientes = $this->generarMatrizStatus($this->anio, $this->mes, 'pendiente');
+        $matrizProcesadas = $this->generarMatrizStatus($this->anio, $this->mes, 'procesada');
+
+        // 3. Trimestrales y Anuales (Ya existentes)
+        $matricesTrimestrales = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $matricesTrimestrales[$i] = $this->generarMatriz($this->anio, null, $i);
+        }
+        $matrizAnual = $this->generarMatriz($this->anio);
 
         $nombreMes = Carbon::create()->month($this->mes)->locale('es')->monthName;
-        $totalGeneral = $municipios->sum('total_mes');
 
-        // --- CORRECCIÓN FINAL AQUÍ ---
-        // Usamos un array limpio para evitar errores de sintaxis
         return view('estadisticas.export_excel', [
-            'municipios'   => $municipios,
-            'entes'        => $entes,
-            'nombreMes'    => $nombreMes,
-            'totalGeneral' => $totalGeneral,
-            'anio'         => $this->anio 
+            'municipios'           => $municipios,
+            'entes'                => $entes,
+            'nombreMes'            => $nombreMes,
+            'anio'                 => $this->anio,
+            'matrizMensual'        => $matrizMensual,
+            'matrizPendientes'     => $matrizPendientes,
+            'matrizProcesadas'     => $matrizProcesadas, 
+            'matricesTrimestrales' => $matricesTrimestrales,
+            'matrizAnual'          => $matrizAnual
         ]);
     }
 

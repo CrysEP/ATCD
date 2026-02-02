@@ -128,7 +128,7 @@ class HistorialExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
             $drawing1->setName('Logo Corporación');
             $drawing1->setPath(public_path('images/logo_corpointa.png'));
             $drawing1->setHeight(60);
-            $drawing1->setCoordinates('A1');
+            $drawing1->setCoordinates('F1');
             $drawings[] = $drawing1;
         }
         if (file_exists(public_path('images/Gobernación_logo.jpg'))) {
@@ -136,7 +136,7 @@ class HistorialExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
             $drawing2->setName('Logo Secundario');
             $drawing2->setPath(public_path('images/Gobernación_logo.jpg'));
             $drawing2->setHeight(60);
-            $drawing2->setCoordinates('F1'); 
+            $drawing2->setCoordinates('A1'); 
             $drawings[] = $drawing2;
         }
         return $drawings;

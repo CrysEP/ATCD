@@ -160,7 +160,7 @@
         </div>
 
         
-        <div class="card shadow-sm border-0 mt-3 position-sticky" style="top: 22rem;">
+        <div class="card shadow-sm border-0 mt-3 " style="top: 22rem;">
         <div class="card-header bg-dark  text-white">
             <h5 class="mb-0"><i class="bi bi-file-earmark-zip"></i> Descarga de solicitudes procesadas</h5>
         </div>

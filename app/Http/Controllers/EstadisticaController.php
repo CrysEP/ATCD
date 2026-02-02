@@ -147,6 +147,7 @@ class EstadisticaController extends Controller
         $dataTipoSolicitante = $tipoSolicitanteData->pluck('total');
 
 
+        // 10. TOP MUNICIPIOS DEL AÑO
 
 $municipiosAnio = DB::table('solicitudes')
             ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
@@ -158,7 +159,7 @@ $municipiosAnio = DB::table('solicitudes')
             ->select('municipios.NombreMunicipio', DB::raw('count(*) as total'))
             ->groupBy('municipios.NombreMunicipio')
             ->orderByDesc('total')
-            ->limit(10) // Top 10 para no saturar el gráfico
+            ->limit(1000) // Top 1000 xd
             ->get();
 
         // Preparar datos para JS
@@ -227,7 +228,7 @@ $municipiosAnio = DB::table('solicitudes')
             $dataTrimestreMunEnte[$mun][$ente]['total'] += $row->total;
         }
 
-        // 14. GLOBAL TRIMESTRES (La suma total que pediste)
+        // 14. GLOBAL TRIMESTRES (La suma total)
         $globalTrimestres = DB::table('solicitudes')
             ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
             ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7)
@@ -242,7 +243,7 @@ $municipiosAnio = DB::table('solicitudes')
         }
 
     
-// === 15. (NUEVO) MENSUALES POR MUNICIPIO ===
+// === 15. MENSUALES POR MUNICIPIO ===
         $mensualesMunicipio = DB::table('solicitudes')
             ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
             ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
@@ -261,7 +262,7 @@ $municipiosAnio = DB::table('solicitudes')
             $dataMensualMun[$row->NombreMunicipio][$row->mes] = $row->total;
         }
 
-        // === 16. (NUEVO) MENSUALES POR ENTE ===
+        // === 16. MENSUALES POR ENTE ===
         $mensualesEnte = DB::table('solicitudes')
             ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
             ->join('tipos_entes', 'relacion_correspondencia.TipoEnte_FK', '=', 'tipos_entes.CodTipoEnte')
@@ -279,6 +280,34 @@ $municipiosAnio = DB::table('solicitudes')
         }
 
 
+        // === 17. NUEVO: TOTALES ANUALES POR MUNICIPIO (Para la leyenda) ===
+        $totalesAnualesPorMunicipio = DB::table('solicitudes')
+            ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
+            ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
+            ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) // No anuladas
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('municipios.NombreMunicipio', DB::raw('count(*) as total'))
+            ->groupBy('municipios.NombreMunicipio')
+            ->orderBy('municipios.NombreMunicipio')
+            ->pluck('total', 'NombreMunicipio'); // Devuelve array [Nombre => Total]
+
+
+// === 18. NUEVO: TOTALES ANUALES POR ENTE (Gráfico Nuevo) ===
+        $entesAnio = DB::table('solicitudes')
+            ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
+            ->join('tipos_entes', 'relacion_correspondencia.TipoEnte_FK', '=', 'tipos_entes.CodTipoEnte')
+            ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) // No anuladas
+            ->whereYear('FechaSolicitud', $anio)
+            ->select('tipos_entes.NombreEnte', DB::raw('count(*) as total'))
+            ->groupBy('tipos_entes.NombreEnte')
+            ->orderByDesc('total')
+            ->get();
+
+        $labelsAnualEntes = $entesAnio->pluck('NombreEnte');
+        $dataAnualEntes = $entesAnio->pluck('total');
+
 
         return view('estadisticas.index', compact(
             'solicitudesHoy',
@@ -293,7 +322,9 @@ $municipiosAnio = DB::table('solicitudes')
             'labelsUrgencia', 'dataUrgencia',
             'labelsTipoSolicitante', 'dataTipoSolicitante',
             'dataTrimestreMun', 'dataTrimestreMunEnte', 'dataGlobalTri',
-            'dataMensualMun', 'dataMensualEnte'
+            'dataMensualMun', 'dataMensualEnte',
+            'totalesAnualesPorMunicipio', 
+            'labelsAnualEntes', 'dataAnualEntes'
 
         ));
     }

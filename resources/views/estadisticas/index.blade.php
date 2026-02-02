@@ -211,6 +211,33 @@
         </div>
     </div>
 
+        {{-- ANÁLISIS TRIMESTRAL --}}
+    <h5 class="mb-3 border-bottom pb-2 mt-5">Análisis Trimestral y por Ente ({{ $anio }})</h5>
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card card-gradient-body shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold text-success">
+                    <i class="bi bi-pie-chart-fill me-2"></i>Totales Globales por Trimestre
+                </div>
+                <div class="card-body">
+                    <canvas id="chartGlobalTrimestres"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card card-gradient-body shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-bar-chart-steps me-2"></i>Desglose Trimestral por Municipio
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="chartTrimestreMun"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- GRÁFICO DE LÍNEA ANUAL --}}
     <h5 class="mb-3 border-bottom pb-2">Métricas Globales Anuales</h5>
     <div class="row g-4 mb-4">
@@ -243,31 +270,7 @@
         </div>
     </div>
 
-    {{-- ANÁLISIS TRIMESTRAL --}}
-    <h5 class="mb-3 border-bottom pb-2 mt-5">Análisis Trimestral y por Ente ({{ $anio }})</h5>
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="card card-gradient-body shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-bold text-success">
-                    <i class="bi bi-pie-chart-fill me-2"></i>Totales Globales por Trimestre
-                </div>
-                <div class="card-body">
-                    <canvas id="chartGlobalTrimestres"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-8">
-            <div class="card card-gradient-body shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-bold">
-                    <i class="bi bi-bar-chart-steps me-2"></i>Desglose Trimestral por Municipio
-                </div>
-                <div class="card-body">
-                    <div style="height: 300px;">
-                        <canvas id="chartTrimestreMun"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+
         <div class="col-12">
             <div class="card card-gradient-body shadow-sm border-0">
                 <div class="card-header bg-white fw-bold">
@@ -277,10 +280,57 @@
                     <div style="height: 500px;">
                         <canvas id="chartEnteMun"></canvas>
                     </div>
+
+<div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-list-check me-2"></i>Totales Anuales por Municipio:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @forelse($totalesAnualesPorMunicipio as $municipio => $total)
+                                <span class="badge bg-light text-dark border border-secondary shadow-sm p-2">
+                                    {{ $municipio }}: <strong class="text-primary fs-6">{{ $total }}</strong>
+                                </span>
+                            @empty
+                                <span class="text-muted small">No hay registros este año.</span>
+                            @endforelse
+                        </div>
+                    </div>
+                    
+
                 </div>
             </div>
         </div>
     </div>
+
+
+<div class="col-12">
+            <div class="card card-gradient-body shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold text-primary">
+                    <i class="bi bi-bank me-2"></i>Total de Solicitudes por Ente (Anual)
+                </div>
+                <div class="card-body">
+                    {{-- Canvas del Gráfico --}}
+                    <canvas id="chartAnualEntes" style="max-height: 400px;"></canvas>
+                    
+                    {{-- LEYENDA DE TOTALES --}}
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-list-check me-2"></i>Detalle de Totales por Ente:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {{-- Iteramos usando los mismos datos del gráfico --}}
+                            @foreach($labelsAnualEntes as $index => $nombreEnte)
+                                <span class="badge bg-light text-dark border border-secondary shadow-sm p-2">
+                                    {{ $nombreEnte }}: 
+                                    <strong class="text-primary fs-6">
+                                        {{ $dataAnualEntes[$index] ?? 0 }}
+                                    </strong>
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    
 
     {{-- CALENDARIO --}}
     <h5 class="mb-3 border-bottom pb-2 mt-5">Días con Solicitudes Procesadas</h5>
@@ -441,7 +491,7 @@
         options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } }, plugins: { legend: { position: 'bottom' } } }
     });
 
-    // === 4. NUEVO: MENSUAL POR MUNICIPIO ===
+    // === 4. MENSUAL POR MUNICIPIO ===
     const dsMensualMun = {!! json_encode($datasetsMensualMun) !!};
     dsMensualMun.forEach((ds, index) => { ds.backgroundColor = extendedColors[index % extendedColors.length]; });
 
@@ -455,7 +505,7 @@
         }
     });
 
-    // === 5. NUEVO: MENSUAL POR ENTE ===
+    // === 5. MENSUAL POR ENTE ===
     const dsMensualEnte = {!! json_encode($datasetsMensualEnte) !!};
     dsMensualEnte.forEach((ds, index) => { ds.backgroundColor = extendedColors[index % extendedColors.length]; });
 
@@ -468,6 +518,35 @@
             plugins: { tooltip: { callbacks: { footer: (items) => 'Total Mes: ' + items.reduce((a, b) => a + b.parsed.y, 0) } } }
         }
     });
+
+
+    // 4. NUEVO: ANUAL ENTES
+new Chart(document.getElementById('chartAnualEntes'), {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($labelsAnualEntes) !!},
+            datasets: [{
+                label: 'Total Solicitudes',
+                data: {!! json_encode($dataAnualEntes) !!},
+                backgroundColor: extendedColors,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false }
+            },
+            scales: { 
+                y: {
+                    beginAtZero: true, 
+                    ticks: { stepSize: 1, precision: 0 } 
+                } 
+            }
+        }
+    });
+
 
     // CALENDARIO
     document.addEventListener('DOMContentLoaded', function() {

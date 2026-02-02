@@ -47,16 +47,15 @@
     <table class="header-table">
         <tr>
             <td style="width: 20%; text-align: left;">
-                <img src="{{ public_path('images/logo_corpointa.png') }}" class="logo">
+                <img src="{{ public_path('images/Gobernación_logo.jpg') }}" class="logo">
+                
             </td>
             <td style="width: 60%;" class="titulo-box">
                 <h1 class="titulo">Listado de Solicitudes Procesadas</h1>
                 <div class="subtitulo">Generado el: {{ date('d/m/Y h:i A') }}</div>
             </td>
             <td style="width: 20%; text-align: right;">
-                @if(file_exists(public_path('images/Gobernación_logo.jpg')))
-                    <img src="{{ public_path('images/Gobernación_logo.jpg') }}" class="logo">
-                @endif
+                <img src="{{ public_path('images/logo_corpointa.png') }}" class="logo">
             </td>
         </tr>
     </table>

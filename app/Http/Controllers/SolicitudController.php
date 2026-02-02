@@ -806,22 +806,22 @@ $anioActual = now()->year;
             $headerTable = $header->addTable();
             $headerTable->addRow();
 
-            // Celda Izquierda (Logo Corporación)
-            $leftCell = $headerTable->addCell(4500);
-            // Asegúrate que la imagen exista en public/images/logo.png
-            if (file_exists(public_path('images/logo_corpointa.png'))) {
-                $leftCell->addImage(public_path('images/logo_corpointa.png'), [
+        
+
+            $rightCell = $headerTable->addCell(4500);
+            if (file_exists(public_path('images/Gobernación_logo.jpg'))) {
+                $rightCell->addImage(public_path('images/Gobernación_logo.jpg'), [
                     'width' => 140, 
                     'height' => 50, 
                     'align' => 'left'
                 ]);
             }
 
-            // Celda Derecha (Segundo Logo opcional, ej: Gobernación)
-            // Si solo tienes uno, puedes borrar este bloque o dejarlo vacío
-            $rightCell = $headerTable->addCell(4500);
-            if (file_exists(public_path('images/Gobernación_logo.jpg'))) {
-                $rightCell->addImage(public_path('images/Gobernación_logo.jpg'), [
+               // Celda derecha (Logo Corporación)
+            $leftCell = $headerTable->addCell(4500);
+            // Asegúrate que la imagen exista en public/images/logo.png
+            if (file_exists(public_path('images/logo_corpointa.png'))) {
+                $leftCell->addImage(public_path('images/logo_corpointa.png'), [
                     'width' => 140, 
                     'height' => 50, 
                     'align' => 'right'
