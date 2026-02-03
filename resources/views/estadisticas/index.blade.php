@@ -151,7 +151,57 @@
         </div>
     </div>
 
-        {{-- === SECCIÓN NUEVA: EVOLUCIÓN MENSUAL DETALLADA === --}}
+{{-- Procesamiento de Datos PHP para el apartado Mensual --}}
+    @php
+        // Definición de colores fijos
+        $extendedColors = ['#0d6efd', '#272b8c', '#42c188', '#7de024', '#dc3545', '#fd7e14', '#ffc107', '#198754', '#20c9c9', '#f03e0d', '#6c757d', '#343a40', '#c98853', '#537ac9'];
+
+        // --- 1. Municipios Mensual ---
+        $dataMensualMun = $dataMensualMun ?? [];
+        $datasetsMensualMun = [];
+        $legendMensualMun = [];
+        $idx = 0;
+        foreach($dataMensualMun as $mun => $valoresMes) {
+            $data = array_values($valoresMes);
+            $totalAnual = array_sum($data);
+            $color = $extendedColors[$idx % count($extendedColors)];
+            
+            $datasetsMensualMun[] = [
+                'label' => $mun,
+                'data' => $data,
+                'stack' => 'mun',
+                'backgroundColor' => $color
+            ];
+            
+            // Datos para la leyenda HTML (SIN COLOR)
+            $legendMensualMun[] = ['name' => $mun, 'total' => $totalAnual];
+            $idx++;
+        }
+
+        // --- 2. Entes Mensual ---
+        $dataMensualEnte = $dataMensualEnte ?? [];
+        $datasetsMensualEnte = [];
+        $legendMensualEnte = [];
+        $idx = 0;
+        foreach($dataMensualEnte as $ente => $valoresMes) {
+            $data = array_values($valoresMes);
+            $totalAnual = array_sum($data);
+            $color = $extendedColors[$idx % count($extendedColors)];
+
+            $datasetsMensualEnte[] = [
+                'label' => $ente,
+                'data' => $data,
+                'stack' => 'ente',
+                'backgroundColor' => $color
+            ];
+
+            // Datos para la leyenda HTML (SIN COLOR)
+            $legendMensualEnte[] = ['name' => $ente, 'total' => $totalAnual];
+            $idx++;
+        }
+    @endphp
+
+    {{-- === SECCIÓN NUEVA: EVOLUCIÓN MENSUAL DETALLADA (Con Leyendas Estilo Anual) === --}}
     <h5 class="mb-3 border-bottom pb-2 mt-5">Evolución Mensual Detallada ({{ $anio }})</h5>
     <div class="row g-4 mb-5">
         
@@ -164,6 +214,19 @@
                 <div class="card-body">
                     <div style="height: 400px;">
                         <canvas id="chartMensualMun"></canvas>
+                    </div>
+                    
+                    {{-- LEYENDA --}}
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-info-circle me-2"></i>Totales Acumulados por Municipio:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($legendMensualMun as $item)
+                                <span class="badge bg-light text-dark border border-secondary shadow-sm p-2 d-flex align-items-center">
+                                    {{ $item['name'] }}: 
+                                    <strong class="text-primary fs-6 ms-1">{{ $item['total'] }}</strong>
+                                </span>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -178,6 +241,19 @@
                 <div class="card-body">
                     <div style="height: 400px;">
                         <canvas id="chartMensualEnte"></canvas>
+                    </div>
+
+                    {{-- LEYENDA --}}
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-info-circle me-2"></i>Totales Acumulados por Ente:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($legendMensualEnte as $item)
+                                <span class="badge bg-light text-dark border border-secondary shadow-sm p-2 d-flex align-items-center">
+                                    {{ $item['name'] }}: 
+                                    <strong class="text-primary fs-6 ms-1">{{ $item['total'] }}</strong>
+                                </span>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,7 +292,7 @@
     <div class="row g-4 mb-5">
         <div class="col-md-4">
             <div class="card card-gradient-body shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-bold text-success">
+                <div class="card-header bg-white fw-bold">
                     <i class="bi bi-pie-chart-fill me-2"></i>Totales Globales por Trimestre
                 </div>
                 <div class="card-body">
@@ -224,6 +300,9 @@
                 </div>
             </div>
         </div>
+
+
+{{-- DESGLOSE TRIMESTRAL POR MUNICIPIO (AGRUPADO / BARRAS LADO A LADO) --}}
         <div class="col-md-8">
             <div class="card card-gradient-body shadow-sm border-0 h-100">
                 <div class="card-header bg-white fw-bold">
@@ -233,10 +312,23 @@
                     <div style="height: 300px;">
                         <canvas id="chartTrimestreMun"></canvas>
                     </div>
+                    
+                    {{-- LEYENDA TOTALES POR MUNICIPIO --}}
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-list-check me-2"></i>Totales Anuales:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @forelse($totalesAnualesPorMunicipio as $municipio => $total)
+                                <span class="badge bg-light text-dark border border-secondary shadow-sm p-2">
+                                    {{ $municipio }}: <strong class="text-primary fs-6">{{ $total }}</strong>
+                                </span>
+                            @empty
+                                <span class="text-muted small">No hay registros.</span>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     {{-- GRÁFICO DE LÍNEA ANUAL --}}
     <h5 class="mb-3 border-bottom pb-2">Métricas Globales Anuales</h5>
@@ -254,7 +346,7 @@
     </div>
 
     {{-- DISTRIBUCIÓN GEOGRÁFICA ANUAL --}}
-    <h5 class="mb-3 border-bottom pb-2">Distribución Geográfica Anual ({{ $anio }})</h5>
+   <h5 class="mb-3 border-bottom pb-2">Distribución Geográfica Anual ({{ $anio }})</h5>
     <div class="row g-4 mb-5">
         <div class="col-12">
             <div class="card card-gradient-body shadow-sm border-0 h-100">
@@ -265,6 +357,19 @@
                     <div style="height: 300px;">
                         <canvas id="chartMunAnio"></canvas>
                     </div>
+
+                    {{-- LEYENDA --}}
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-list-check me-2"></i>Totales por Municipio:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($labelsMunAnio as $index => $mun)
+                                <span class="badge bg-light text-dark border border-secondary shadow-sm p-2">
+                                    {{ $mun }}: <strong class="text-primary fs-6">{{ $dataMunAnio[$index] }}</strong>
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -303,8 +408,8 @@
 
 <div class="col-12">
             <div class="card card-gradient-body shadow-sm border-0 mb-4">
-                <div class="card-header bg-white fw-bold text-primary">
-                    <i class="bi bi-bank me-2"></i>Total de Solicitudes por Ente (Anual)
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-bank me-2"></i>Detalle de Totales por Ente (Anual - {{ $anio }}):
                 </div>
                 <div class="card-body">
                     {{-- Canvas del Gráfico --}}
@@ -312,7 +417,7 @@
                     
                     {{-- LEYENDA DE TOTALES --}}
                     <div class="mt-4 pt-3 border-top">
-                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-list-check me-2"></i>Detalle de Totales por Ente:</h6>
+                        <h6 class="fw-bold text-muted mb-2"><i class="bi bi-list-check me-2"></i>Total de Solicitudes por Ente (Anual): </h6>
                         <div class="d-flex flex-wrap gap-2">
                             {{-- Iteramos usando los mismos datos del gráfico --}}
                             @foreach($labelsAnualEntes as $index => $nombreEnte)
@@ -378,7 +483,7 @@
         $datasetsEnte[] = [ 'label' => $eName, 'data' => $data, 'stack' => 'entes' ];
     }
 
-    // --- NUEVO: PREPARAR DATASETS MENSUALES ---
+
     // 1. Municipios Mensual
     $dataMensualMun = $dataMensualMun ?? [];
     $datasetsMensualMun = [];
@@ -387,7 +492,7 @@
         $datasetsMensualMun[] = [
             'label' => $mun,
             'data' => $data,
-            'stack' => 'mun' // Apilados
+            'stack' => 'mun'
         ];
     }
 
@@ -403,6 +508,8 @@
         ];
     }
 @endphp
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -464,19 +571,25 @@
         options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } }
     });
 
-    // 2. DESGLOSE TRIMESTRAL MUNICIPIO
+// 2. DESGLOSE TRIMESTRAL MUNICIPIO (AGRUPADO)
     new Chart(document.getElementById('chartTrimestreMun'), {
         type: 'bar',
         data: {
             labels: {!! json_encode($labelsMun) !!},
             datasets: [
-                { label: 'T1', data: {!! json_encode($d1) !!}, backgroundColor: '#0d6efd', stack: 'q' },
-                { label: 'T2', data: {!! json_encode($d2) !!}, backgroundColor: '#198754', stack: 'q' },
-                { label: 'T3', data: {!! json_encode($d3) !!}, backgroundColor: '#ffc107', stack: 'q' },
-                { label: 'T4', data: {!! json_encode($d4) !!}, backgroundColor: '#dc3545', stack: 'q' }
+                { label: 'Tri 1', data: {!! json_encode($d1) !!}, backgroundColor: '#0d6efd' },
+                { label: 'Tri 2', data: {!! json_encode($d2) !!}, backgroundColor: '#198754' },
+                { label: 'Tri 3', data: {!! json_encode($d3) !!}, backgroundColor: '#ffc107' },
+                { label: 'Tri 4', data: {!! json_encode($d4) !!}, backgroundColor: '#dc3545' }
             ]
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } }
+        options: { 
+            responsive: true, maintainAspectRatio: false, 
+            scales: { x: { stacked: false }, y: { stacked: false, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } },
+            plugins: {
+                legend: { display: true, position: 'top' }
+            }
+        }
     });
 
     // 3. ENTES POR MUNICIPIO (TOTAL)
@@ -520,7 +633,7 @@
     });
 
 
-    // 4. NUEVO: ANUAL ENTES
+    // 4. ANUAL ENTES
 new Chart(document.getElementById('chartAnualEntes'), {
         type: 'bar',
         data: {

@@ -155,11 +155,11 @@ $municipiosAnio = DB::table('solicitudes')
             ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
             ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
             ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) // No anuladas
-            ->whereYear('FechaSolicitud', $anio) // <--- SOLO FILTRO DE AÑO
+            ->whereYear('FechaSolicitud', $anio) // <--- FILTRO DE AÑO
             ->select('municipios.NombreMunicipio', DB::raw('count(*) as total'))
             ->groupBy('municipios.NombreMunicipio')
             ->orderByDesc('total')
-            ->limit(1000) // Top 1000 xd
+            //->limit(1000) Top 1000 xd
             ->get();
 
         // Preparar datos para JS
@@ -294,7 +294,7 @@ $municipiosAnio = DB::table('solicitudes')
             ->pluck('total', 'NombreMunicipio'); // Devuelve array [Nombre => Total]
 
 
-// === 18. NUEVO: TOTALES ANUALES POR ENTE (Gráfico Nuevo) ===
+// === 18. TOTALES ANUALES POR ENTE (Gráfico Nuevo) ===
         $entesAnio = DB::table('solicitudes')
             ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
             ->join('tipos_entes', 'relacion_correspondencia.TipoEnte_FK', '=', 'tipos_entes.CodTipoEnte')

@@ -403,8 +403,9 @@ $anioActual = now()->year;
         return back()->with('success', 'Estado actualizado.');
     }
 
-    public function updateFlujo(Request $request, $id)
+   public function updateFlujo(Request $request, $id)
     {
+        // 1. VALIDACIÓN CORREGIDA: Quitamos el 'required_if' que estaba bloqueando
         $validatedData = $request->validate([
             'Nro_Oficio' => 'required|string|max:100',
             'InstruccionPresidencia' => 'nullable|string',
@@ -412,10 +413,11 @@ $anioActual = now()->year;
             'TipoSolicitudPlanilla' => 'required|string',
             'Gerencia_Jefatura' => 'nullable|string|max:255',
             'Sector' => 'nullable|string|max:300',
-            'categoria_solicitud' => 'required|string',
-            'detalle_solicitud' => 'required|string',
-            // --- CAMBIO A PLURAL ---
-            'tipo_ente' => 'required|integer|exists:tipos_entes,CodTipoEnte'
+            'tipo_ente' => 'required|integer|exists:tipos_entes,CodTipoEnte',
+            
+            // Los dejamos como nullable para que NO bloqueen el guardado si el formulario no los tiene
+            'categoria_solicitud' => 'nullable|string',
+            'detalle_solicitud' => 'nullable|string',
         ]);
 
         try {
@@ -425,6 +427,7 @@ $anioActual = now()->year;
                 return back()->with('error', 'No se puede editar una solicitud ANULADA.');
             }
 
+            // 2. ACTUALIZACIÓN DE CORRESPONDENCIA (Ahora sí debería pasar)
             $solicitud->correspondencia->update([
                 'Nro_Oficio' => $validatedData['Nro_Oficio'],
                 'InstruccionPresidencia' => $validatedData['InstruccionPresidencia'] ?? '',
@@ -434,45 +437,50 @@ $anioActual = now()->year;
                 'TipoEnte_FK' => $validatedData['tipo_ente'],
             ]);
 
+            // 3. ACTUALIZAR EL TIPO EN LA SOLICITUD PADRE
             $solicitud->update(['TipoSolicitudPlanilla' => $validatedData['TipoSolicitudPlanilla']]);
 
-            // Actualizar Clasificación
-            $cat = $request->categoria_solicitud;
-            $det = $request->detalle_solicitud;
-            $nuevoId = null;
+            // 4. LÓGICA DE CLASIFICACIÓN (Solo se ejecuta si el formulario envió los datos)
+            // Usamos $request->filled para verificar si existen antes de intentar usarlos
+            if ($validatedData['TipoSolicitudPlanilla'] === 'Solicitud o Petición' 
+                && $request->filled('categoria_solicitud') 
+                && $request->filled('detalle_solicitud')) {
+                
+                $cat = $request->categoria_solicitud;
+                $det = $request->detalle_solicitud;
+                $nuevoId = null;
 
-            if ($cat == 'servicio_publico') {
-                $columna = ($det == 'Alumbrado') ? 'TendidosElectricos' : 'Hidraulicos';
-                $nuevoId = DB::table('servicio_publico')->insertGetId([$columna => $det]);
-            } elseif ($cat == 'infraestructura_vial') {
-                $nuevoId = DB::table('infraestructura_vial')->insertGetId(['Vialidad' => $det]);
-            } elseif ($cat == 'fortalecimiento_instituciones') {
-                $nuevoId = DB::table('fortalecimiento_instituciones')->insertGetId(['Edificaciones' => $det]);
-            } elseif ($cat == 'apoyo_instituciones') {
-                $nuevoId = DB::table('apoyo_instituciones')->insertGetId(['EquipoMateriales' => $det]);
-            } elseif ($cat == 'apoyo_ciudadania') {
-                $nuevoId = DB::table('apoyo_ciudadania')->insertGetId(['ApoyoCiudadania' => $det]);
-            }
+                if ($cat == 'servicio_publico') {
+                    $columna = ($det == 'Alumbrado') ? 'TendidosElectricos' : 'Hidraulicos';
+                    $nuevoId = DB::table('servicio_publico')->insertGetId([$columna => $det]);
+                } elseif ($cat == 'infraestructura_vial') {
+                    $nuevoId = DB::table('infraestructura_vial')->insertGetId(['Vialidad' => $det]);
+                } elseif ($cat == 'fortalecimiento_instituciones') {
+                    $nuevoId = DB::table('fortalecimiento_instituciones')->insertGetId(['Edificaciones' => $det]);
+                } elseif ($cat == 'apoyo_instituciones') {
+                    $nuevoId = DB::table('apoyo_instituciones')->insertGetId(['EquipoMateriales' => $det]);
+                } elseif ($cat == 'apoyo_ciudadania') {
+                    $nuevoId = DB::table('apoyo_ciudadania')->insertGetId(['ApoyoCiudadania' => $det]);
+                }
 
-            $updateData = [
-                'ServicioPublico_FK' => ($cat == 'servicio_publico') ? $nuevoId : null,
-                'InfraestructuraVial_FK' => ($cat == 'infraestructura_vial') ? $nuevoId : null,
-                'FortalecimientoInstituciones_FK' => ($cat == 'fortalecimiento_instituciones') ? $nuevoId : null,
-                'ApoyoInstituciones_FK' => ($cat == 'apoyo_instituciones') ? $nuevoId : null,
-                'ApoyoCiudadania_FK' => ($cat == 'apoyo_ciudadania') ? $nuevoId : null,
-            ];
+                $updateData = [
+                    'ServicioPublico_FK' => ($cat == 'servicio_publico') ? $nuevoId : null,
+                    'InfraestructuraVial_FK' => ($cat == 'infraestructura_vial') ? $nuevoId : null,
+                    'FortalecimientoInstituciones_FK' => ($cat == 'fortalecimiento_instituciones') ? $nuevoId : null,
+                    'ApoyoInstituciones_FK' => ($cat == 'apoyo_instituciones') ? $nuevoId : null,
+                    'ApoyoCiudadania_FK' => ($cat == 'apoyo_ciudadania') ? $nuevoId : null,
+                ];
 
-            if ($solicitud->TipoSolicitud_FK) {
-                // --- CAMBIO A PLURAL ---
-                DB::table('tipos_solicitudes')
-                    ->where('CodTipoSolicitud', $solicitud->TipoSolicitud_FK)
-                    ->update($updateData);
-            } else {
-                $newCod = 'tsl_' . uniqid();
-                $updateData['CodTipoSolicitud'] = $newCod;
-                // --- CAMBIO A PLURAL ---
-                DB::table('tipos_solicitudes')->insert($updateData);
-                $solicitud->update(['TipoSolicitud_FK' => $newCod]);
+                if ($solicitud->TipoSolicitud_FK) {
+                    DB::table('tipos_solicitudes')
+                        ->where('CodTipoSolicitud', $solicitud->TipoSolicitud_FK)
+                        ->update($updateData);
+                } else {
+                    $newCod = 'tsl_' . uniqid();
+                    $updateData['CodTipoSolicitud'] = $newCod;
+                    DB::table('tipos_solicitudes')->insert($updateData);
+                    $solicitud->update(['TipoSolicitud_FK' => $newCod]);
+                }
             }
 
             return back()->with('success', 'Datos actualizados correctamente.');

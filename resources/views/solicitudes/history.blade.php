@@ -101,21 +101,21 @@
 
 
 {{-- Filtro Código Interno --}}
-        <div class="col-md-3">
+        <div class="col-md-6">
             <label class="form-label fw-bold small text-muted">Código Interno</label>
             <input type="text" class="form-control" name="codigo_interno" 
                    value="{{ request('codigo_interno') }}" placeholder="Ej: CO-00005">
         </div>
 
         {{-- Filtro Nro UAC --}}
-        <div class="col-md-3">
+        <div class="col-md-6">
             <label class="form-label fw-bold small text-muted">Nro. UAC</label>
             <input type="text" class="form-control" name="nro_uac" 
                    value="{{ request('nro_uac') }}" placeholder="Ej: UAC-12345">
         </div>
 
         {{-- Filtro Municipio --}}
-        <div class="col-md-3">
+        <div class="col-md-6">
             <label class="form-label fw-bold small text-muted">Municipio</label>
             <select class="form-select" name="municipio_id">
                 <option value="">-- Todos --</option>
