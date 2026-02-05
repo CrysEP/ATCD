@@ -67,8 +67,6 @@
                 </form>
             @endif
 
-          
-
             <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
                 &larr; Volver
             </a>
@@ -89,13 +87,11 @@
                         <div class="col-md-6"><strong>Nombre:</strong> {{ $solicitud->persona->NombreCompleto }}</div>
                         <div class="col-md-6"><strong>Cédula:</strong> {{ $solicitud->persona->CedulaPersona }}</div>
                         
-                        {{-- NUEVOS CAMPOS AGREGADOS --}}
                         <div class="col-md-6"><strong>Género:</strong> {{ $solicitud->persona->SexoPersona == 'M' ? 'Masculino' : 'Femenino' }}</div>
                         <div class="col-md-6"><strong>Fecha Nacimiento:</strong> 
                             {{ \Carbon\Carbon::parse($solicitud->persona->FechaNacPersona)->format('d/m/Y') }}
                             <small class="text-muted">({{ \Carbon\Carbon::parse($solicitud->persona->FechaNacPersona)->age }} años)</small>
                         </div>
-                        {{-- ----------------------- --}}
 
                         <div class="col-md-6"><strong>Teléfono:</strong> {{ $solicitud->persona->TelefonoPersona }}</div>
                         <div class="col-md-6"><strong>Correo:</strong> {{ $solicitud->persona->CorreoElectronicoPersona ?? 'N/A' }}</div>
@@ -119,14 +115,10 @@
                         <div class="col-md-6"><strong>Tipo Solicitante:</strong> {{ $solicitud->TipoSolicitante }}</div>
                         
                         <div class="col-md-6"><strong>Fecha Solicitud (Planilla):</strong> {{ $solicitud->FechaSolicitud->format('d/m/Y h:i A') }}</div>
-                        
-                        {{-- NUEVO CAMPO --}}
                         <div class="col-md-6"><strong>Fecha Atención (Recepción):</strong> {{ $solicitud->FechaAtención->format('d/m/Y h:i A') }}</div>
-                        {{-- ----------- --}}
 
                         <div class="col-md-6"><strong>Código Interno:</strong> {{ $solicitud->correspondencia->CodigoInterno ?? 'N/A' }}</div>
                         
-                        {{-- NUEVOS CAMPOS DE DIRECCIÓN --}}
                         <div class="col-12 mt-3 border-top pt-2">
                             <strong>Dirección de Habitación:</strong><br>
                             {{ $solicitud->DirecciónHabitación }}
@@ -137,7 +129,6 @@
                             {{ $solicitud->PuntoReferencia }}
                         </div>
                         @endif
-                        {{-- ---------------------------- --}}
                     </div>
 
                     <div class="mt-4 border-top pt-3">
@@ -147,21 +138,17 @@
                 </div>
             </div>
 
-            
             <div class="d-flex gap-2">
-    {{-- BOTÓN PDF --}}
-    <a href="{{ route('solicitudes.pdf', $solicitud->CodSolicitud) }}" class="btn btn-danger" target="_blank">
-        <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
-    </a> 
-
-
-    {{-- Botón Ticket --}}
-<a href="{{ route('solicitudes.ticket', $solicitud->CodSolicitud) }}" target="_blank" class="btn btn-outline-dark">
-    <i class="bi bi-receipt"></i> Imprimir Ticket
-</a>
-    
-</div><br>
-         {{-- 3. Archivos --}}
+                <a href="{{ route('solicitudes.pdf', $solicitud->CodSolicitud) }}" class="btn btn-danger" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                </a> 
+                <a href="{{ route('solicitudes.ticket', $solicitud->CodSolicitud) }}" target="_blank" class="btn btn-outline-dark">
+                    <i class="bi bi-receipt"></i> Imprimir Ticket
+                </a>
+            </div>
+            <br>
+            
+            {{-- 3. Archivos --}}
             <div class="card card-gradient-body shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
                     <h5 class="mb-0">3. Archivos Adjuntos</h5>
@@ -171,18 +158,12 @@
                         <ul class="list-group">
                             @foreach($solicitud->archivos as $archivo)
                             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                
-                                {{-- Nombre del Archivo y Peso --}}
                                 <div class="text-truncate me-3" style="max-width: 60%;">
                                     <i class="bi bi-file-earmark-text-fill text-primary me-2"></i> 
                                     <span class="fw-bold text-dark">{{ $archivo->nombre_original }}</span>
                                     <small class="text-muted ms-2">({{ number_format($archivo->tamano_archivo / 1024, 2) }} KB)</small>
                                 </div>
-
-                                {{-- Botones de Acción (Ver y Descargar) --}}
                                 <div class="d-flex gap-2 mt-2 mt-md-0">
-                                    
-                                    {{-- BOTÓN PREVISUALIZAR --}}
                                     @if(in_array($archivo->tipo_archivo, ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']))
                                         <button type="button" class="btn btn-sm btn-info text-white" 
                                                 onclick="abrirModalPreview(this)"
@@ -193,13 +174,10 @@
                                             <i class="bi bi-eye-fill"></i> Ver
                                         </button>
                                     @endif
-
-                                    {{-- BOTÓN DESCARGAR --}}
                                     <a href="{{ route('solicitudes.downloadFile', $archivo->id) }}" class="btn btn-sm btn-outline-primary" title="Descargar">
                                         <i class="bi bi-download"></i> Descargar
                                     </a>
                                 </div>
-
                             </li>
                             @endforeach
                         </ul>
@@ -209,17 +187,14 @@
                             No hay archivos adjuntos en esta solicitud.
                         </div>
                     @endif
-                    </div>
                 </div>
             </div>
+        </div>
 
-        
-<br> 
         {{-- Columna Derecha: Correspondencia y Acciones --}}
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 position-sticky" style="top: 1.5rem;">
-             
-               <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Relación Correspondencia</h5>
                     @can ('es-admin')
                         @if($solicitud->correspondencia->StatusSolicitud_FK != 7)
@@ -239,26 +214,19 @@
 
                     <ul class="list-group list-group-flush mb-3">
                         <li class="list-group-item px-0"><strong>Nro. Oficio:</strong> {{ $solicitud->correspondencia->Nro_Oficio ?? 'N/A' }}</li>
-                        
-                        {{-- NUEVO: ENTE (CATEGORÍA) --}}
                         <li class="list-group-item px-0">
                             <strong>Ente (Categoría):</strong><br>
                             <span class="text-dark fw-bold">
                                 {{ $tiposEnte->firstWhere('CodTipoEnte', $solicitud->correspondencia->TipoEnte_FK)?->NombreEnte ?? 'N/A' }}
                             </span>
                         </li>
-                        {{-- ------------------------ --}}
-
                         <li class="list-group-item px-0"><strong>Sector:</strong> {{ $solicitud->correspondencia->Sector ?? 'N/A' }}</li>
                         <li class="list-group-item px-0"><strong>Gerencia/Jefatura:</strong> {{ $solicitud->correspondencia->Gerencia_Jefatura ?? 'N/A' }}</li>
-                        
                         <li class="list-group-item px-0">
                             <strong>Observación:</strong><br>
                             <span class="text-muted small" style="white-space: pre-wrap;">{{ $solicitud->correspondencia->Observacion ?? 'N/A' }}</span>
                         </li>
-                     
                         <li class="list-group-item px-0"><strong>Tipo de Solicitud:</strong> <span class="badge bg-info text-dark">{{ $solicitud->TipoSolicitudPlanilla }}</span></li>
-
                         <li class="list-group-item px-0"><strong>Recibido:</strong> {{ $solicitud->correspondencia->FechaRecibido->format('d/m/Y') }}</li>
                         <li class="list-group-item px-0"><strong>Registrado por:</strong> {{ $solicitud->funcionario->persona->NombreCompleto ?? 'N/A' }}</li>
                     </ul>
@@ -314,7 +282,6 @@
     <div class="modal fade" id="modalEditarFlujo" tabindex="-1" aria-labelledby="modalEditarFlujoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                
                 <form action="{{ route('solicitudes.updateFlujo', ['id' => $solicitud->CodSolicitud]) }}" method="POST">
                     @csrf
                     <div class="modal-header">
@@ -322,45 +289,33 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        
                         <p class="text-muted small">
                             Utilice este formulario para corregir datos administrativos internos.
                         </p>
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="Nro_Oficio" class="form-label">Nro. Oficio:</label>
-                                <input type="text" class="form-control" id="Nro_Oficio" name="Nro_Oficio" 
-                                       value="{{ $solicitud->correspondencia->Nro_Oficio }}">
+                                <input type="text" class="form-control" id="Nro_Oficio" name="Nro_Oficio" value="{{ $solicitud->correspondencia->Nro_Oficio }}">
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label for="Gerencia_Jefatura" class="form-label">Gerencia / Jefatura:</label>
-                                <input type="text" class="form-control" id="Gerencia_Jefatura" name="Gerencia_Jefatura" 
-                                       value="{{ $solicitud->correspondencia->Gerencia_Jefatura }}">
+                                <input type="text" class="form-control" id="Gerencia_Jefatura" name="Gerencia_Jefatura" value="{{ $solicitud->correspondencia->Gerencia_Jefatura }}">
                             </div>
                         </div>
-
                         <div class="mb-3">
                             <label for="Sector" class="form-label">Sector:</label>
-                            <input type="text" class="form-control" id="Sector" name="Sector" 
-                                   value="{{ $solicitud->correspondencia->Sector }}" maxlength="100">
+                            <input type="text" class="form-control" id="Sector" name="Sector" value="{{ $solicitud->correspondencia->Sector }}" maxlength="100">
                         </div>
-
-                        {{-- SELECTOR DE ENTE --}}
                         <div class="mb-3">
                             <label for="tipo_ente" class="form-label">Ente (Categoría):</label>
                             <select class="form-select" id="tipo_ente" name="tipo_ente" required>
                                 @foreach($tiposEnte as $ente)
-                                    <option value="{{ $ente->CodTipoEnte }}" 
-                                        @selected($solicitud->correspondencia->TipoEnte_FK == $ente->CodTipoEnte)>
+                                    <option value="{{ $ente->CodTipoEnte }}" @selected($solicitud->correspondencia->TipoEnte_FK == $ente->CodTipoEnte)>
                                         {{ $ente->NombreEnte }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
-                        {{-- ---------------- --}}
-
                         <div class="mb-3">
                             <label for="TipoSolicitudPlanilla" class="form-label">Tipo de Solicitud (Planilla):</label>
                             <select class="form-select" id="TipoSolicitudPlanilla" name="TipoSolicitudPlanilla">
@@ -369,17 +324,14 @@
                                 <option value="Denuncia" @selected($solicitud->TipoSolicitudPlanilla == 'Denuncia')>Denuncia</option>
                             </select>
                         </div>
-
                         <div class="mb-3">
                             <label for="InstruccionPresidencia" class="form-label">Instrucciones de Presidencia:</label>
                             <textarea class="form-control" id="InstruccionPresidencia" name="InstruccionPresidencia" rows="4">{{ $solicitud->correspondencia->InstruccionPresidencia }}</textarea>
                         </div>
-
                         <div class="mb-3">
                             <label for="Observacion" class="form-label">Observación (Opcional):</label>
                             <textarea class="form-control" id="Observacion" name="Observacion" rows="2">{{ $solicitud->correspondencia->Observacion }}</textarea>
                         </div>
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -404,73 +356,66 @@
         }
     </script>
 
-
-{{-- === MODAL DE PREVISUALIZACIÓN === --}}
-<div class="modal fade" id="modalPrevisualizacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered"> 
-        <div class="modal-content" style="height: 90vh;"> 
-            <div class="modal-header bg-light py-2">
-                <h6 class="modal-title fw-bold" id="tituloArchivo">Vista Previa</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0 bg-discord d-flex justify-content-center align-items-center" style="overflow: hidden;">
-                <iframe id="visorPDF" src="" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
-                <img id="visorImagen" src="" class="img-fluid" style="max-height: 100%; max-width: 100%; display: none;" alt="Vista previa">
+    {{-- === MODAL DE PREVISUALIZACIÓN === --}}
+    <div class="modal fade" id="modalPrevisualizacion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered"> 
+            <div class="modal-content" style="height: 90vh;"> 
+                <div class="modal-header bg-light py-2">
+                    <h6 class="modal-title fw-bold" id="tituloArchivo">Vista Previa</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 bg-discord d-flex justify-content-center align-items-center" style="overflow: hidden;">
+                    <iframe id="visorPDF" src="" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+                    <img id="visorImagen" src="" class="img-fluid" style="max-height: 100%; max-width: 100%; display: none;" alt="Vista previa">
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-{{-- Importar Bootstrap Bundle (Para asegurar que el Modal funcione) --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    let modalPreviewInstance = null;
-
-    function abrirModalPreview(boton) {
-        // Obtener datos seguros
-        const url = boton.getAttribute('data-url');
-        const tipo = boton.getAttribute('data-tipo');
-        const nombre = boton.getAttribute('data-nombre');
-
-        // Configurar título y limpiar visualizadores
-        document.getElementById('tituloArchivo').textContent = nombre;
-        const iframe = document.getElementById('visorPDF');
-        const img = document.getElementById('visorImagen');
-        
-        iframe.style.display = 'none';
-        iframe.src = ''; 
-        img.style.display = 'none';
-        img.src = '';
-
-        // Mostrar el visor correcto
-        if (tipo === 'application/pdf') {
-            iframe.src = url;
-            iframe.style.display = 'block';
-        } else {
-            img.src = url;
-            img.style.display = 'block';
-        }
-
-        // Abrir Modal
-        const modalEl = document.getElementById('modalPrevisualizacion');
-        if (!modalPreviewInstance) {
-            modalPreviewInstance = new bootstrap.Modal(modalEl);
-        }
-        modalPreviewInstance.show();
-    }
+    {{-- NOTA IMPORTANTE: Se eliminó la importación manual de Bootstrap Bundle aquí porque causaba conflicto con la del Layout --}}
     
-    // Limpiar src al cerrar para detener carga
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalEl = document.getElementById('modalPrevisualizacion');
-        if(modalEl){
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                document.getElementById('visorPDF').src = '';
-                document.getElementById('visorImagen').src = '';
-            });
-        }
-    });
-</script>
+    <script>
+        let modalPreviewInstance = null;
 
+        function abrirModalPreview(boton) {
+            const url = boton.getAttribute('data-url');
+            const tipo = boton.getAttribute('data-tipo');
+            const nombre = boton.getAttribute('data-nombre');
+
+            document.getElementById('tituloArchivo').textContent = nombre;
+            const iframe = document.getElementById('visorPDF');
+            const img = document.getElementById('visorImagen');
+            
+            iframe.style.display = 'none';
+            iframe.src = ''; 
+            img.style.display = 'none';
+            img.src = '';
+
+            if (tipo === 'application/pdf') {
+                iframe.src = url;
+                iframe.style.display = 'block';
+            } else {
+                img.src = url;
+                img.style.display = 'block';
+            }
+
+            const modalEl = document.getElementById('modalPrevisualizacion');
+            if (!modalPreviewInstance) {
+                // Asumimos que Bootstrap ya está cargado globalmente desde app.js
+                modalPreviewInstance = new bootstrap.Modal(modalEl);
+            }
+            modalPreviewInstance.show();
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalEl = document.getElementById('modalPrevisualizacion');
+            if(modalEl){
+                modalEl.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('visorPDF').src = '';
+                    document.getElementById('visorImagen').src = '';
+                });
+            }
+        });
+    </script>
 
 @endsection

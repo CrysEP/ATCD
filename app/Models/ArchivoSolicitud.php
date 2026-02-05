@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArchivoSolicitud extends Model
 {
+    // Nombre de la tabla en la base de datos
     protected $table = 'archivos_solicitudes';
     
+    // Campos que permitimos llenar masivamente
     protected $fillable = [
         'solicitud_id',
         'nombre_original',

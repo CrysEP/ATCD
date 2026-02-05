@@ -83,7 +83,7 @@
                         <label for="search" class="form-label">Buscar</label>
                         <input type="text" class="form-control" id="search" name="search" 
                                value="{{ request('search') }}"
-                               placeholder="Cédula, Código, Nombre...">
+                               placeholder="Cédula, Nombre, palabra clave...">
                     </div>
                     
 

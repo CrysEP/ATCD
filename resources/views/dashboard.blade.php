@@ -93,7 +93,7 @@
                 <form method="GET" action="{{ route('dashboard') }}">
                     <div class="mb-3">
                         <label for="search" class="form-label">Buscar</label>
-                        <input type="text" class="form-control" id="search" name="search" placeholder="Cédula, Nro. UAC, palabra clave...">
+                        <input type="text" class="form-control" id="search" name="search" placeholder="Cédula, Nombre, palabra clave...">
                     </div>
                     
 

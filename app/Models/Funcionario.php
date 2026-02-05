@@ -14,10 +14,12 @@ class Funcionario extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'CodFuncionario',
         'CargoFuncionario',
         'FirmaDigital',
         'AdscripciónFuncionario',
-        'CedulaPersona_FK'
+        'CedulaPersona_FK',
+        'Departamento_FK'
     ];
 
     /**
@@ -41,4 +43,11 @@ class Funcionario extends Model
         }
         return null; // Devuelve nulo si no hay firma
     }
+
+
+public function departamento()
+{
+    return $this->belongsTo(Departamento::class, 'Departamento_FK', 'CodDepartamento');
+}
+
 }

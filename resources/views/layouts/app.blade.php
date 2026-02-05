@@ -59,7 +59,9 @@
                                     <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->NombreUsuario }}
                                 </a>
 
+                                
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
@@ -72,7 +74,33 @@
                                 </div>
                             </li>
                         @endguest
+
+
+@can('es-admin')
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-people-fill"></i> Configuración Usuarios
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item" href="{{ route('admin.usuarios.create') }}">
+                    <i class="bi bi-person-plus"></i> Registrar Nuevo
+                </a>
+            </li>
+            {{-- Aquí pondremos luego la lista de usuarios --}}
+            <li><a class="dropdown-item" href="{{ route('admin.usuarios.index') }}">
+                                            <i class="bi bi-list-ul me-2"></i>Gestionar Usuarios
+            </a></li>
+        </ul>
+    </li>
+@endcan
+
                     </ul>
+
+
+
+
+                    
                 </div>
             </div>
         </nav>
