@@ -34,27 +34,85 @@
                         @csrf
 
                         <h5 class="text-secondary mb-3 border-bottom pb-2">1. Datos Personales</h5>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <label class="form-label">Cédula</label>
-                                <div class="input-group">
-                                    <select name="tipo_cedula" class="form-select" style="max-width: 70px;">
-                                        <option value="V-">V-</option>
-                                        <option value="E-">E-</option>
-                                    </select>
-                                    {{-- 'value="{{ old('cedula') }}"' mantiene lo que escribiste si falla --}}
-                                    <input type="text" name="cedula" class="form-control" placeholder="Ej: 12345678" required value="{{ old('cedula') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Nombres</label>
-                                <input type="text" name="nombres" class="form-control" required value="{{ old('nombres') }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Apellidos</label>
-                                <input type="text" name="apellidos" class="form-control" required value="{{ old('apellidos') }}">
-                            </div>
-                        </div>
+                   <div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label class="form-label">Cédula</label>
+        <div class="input-group">
+            <select name="tipo_cedula" id="tipo_cedula" class="form-select" style="max-width: 70px;">
+                <option value="V-">V-</option>
+                <option value="E-">E-</option>
+            </select>
+            <input type="text" name="cedula" id="cedula_input" class="form-control" placeholder="12345678" required>
+            <button class="btn btn-outline-primary" type="button" id="btn_buscar_cedula">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+        <small id="mensaje_cedula" class="form-text text-muted"></small>
+    </div>
+    
+    <div class="col-md-4">
+        <label class="form-label">Nombres</label>
+        <input type="text" name="nombres" id="nombres" class="form-control" required oninput="this.value = this.value.toUpperCase()">
+    </div>
+    
+    <div class="col-md-4">
+        <label class="form-label">Apellidos</label>
+        <input type="text" name="apellidos" id="apellidos" class="form-control" required oninput="this.value = this.value.toUpperCase()">
+    </div>
+</div>
+
+<script>
+document.getElementById('btn_buscar_cedula').addEventListener('click', function() {
+    let tipo = document.getElementById('tipo_cedula').value;
+    let numero = document.getElementById('cedula_input').value;
+    let cedulaCompleta = tipo + numero;
+    let mensaje = document.getElementById('mensaje_cedula');
+    let campoNombres = document.getElementById('nombres');
+    let campoApellidos = document.getElementById('apellidos');
+
+    if(numero.length < 5) {
+        mensaje.className = 'text-danger';
+        mensaje.innerText = 'Escriba una cédula válida.';
+        return;
+    }
+
+    mensaje.className = 'text-info';
+    mensaje.innerText = 'Buscando...';
+
+    // Llamada AJAX a la ruta que creamos
+    fetch(`/admin/personas/buscar/${cedulaCompleta}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.encontrado) {
+                if (data.tiene_usuario) {
+                    mensaje.className = 'text-danger fw-bold';
+                    mensaje.innerText = '¡Esta persona ya tiene un usuario!';
+                    campoNombres.value = data.nombres;
+                    campoApellidos.value = data.apellidos;
+                } else {
+                    mensaje.className = 'text-success fw-bold';
+                    mensaje.innerText = 'Persona encontrada en base de datos.';
+                    campoNombres.value = data.nombres;
+                    campoApellidos.value = data.apellidos;
+                    // Opcional: Bloquear campos para no editar datos viejos
+                    // campoNombres.readOnly = true;
+                    // campoApellidos.readOnly = true;
+                }
+            } else {
+                mensaje.className = 'text-muted';
+                mensaje.innerText = 'Persona nueva (no registrada previamente).';
+                campoNombres.value = '';
+                campoApellidos.value = '';
+                campoNombres.readOnly = false;
+                campoApellidos.readOnly = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mensaje.innerText = 'Error al buscar.';
+        });
+});
+</script>
 
                         <h5 class="text-secondary mb-3 border-bottom pb-2">2. Datos de Cuenta</h5>
                         <div class="row g-3 mb-4">

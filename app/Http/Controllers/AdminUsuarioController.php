@@ -27,6 +27,31 @@ class AdminUsuarioController extends Controller
         return view('admin.usuarios.create', compact('departamentos'));
     }
 
+
+// AGREGAR AL FINAL DE TU CONTROLADOR
+    public function buscarPersona($cedula)
+    {
+        $persona = Persona::where('CedulaPersona', $cedula)->first();
+
+        if ($persona) {
+            // Verificamos si ya tiene usuario para avisar
+            $tieneUsuario = Usuario::where('CedulaPersonaUsuario_FK', $cedula)->exists();
+            
+            return response()->json([
+                'encontrado' => true,
+                'nombres' => $persona->NombresPersona,
+                'apellidos' => $persona->ApellidosPersona,
+                'telefono' => $persona->TelefonoPersona,
+                'tiene_usuario' => $tieneUsuario
+            ]);
+        }
+
+        return response()->json(['encontrado' => false]);
+    }
+
+
+
+
     // 3. GUARDAR NUEVO USUARIO (YA LO TENÍAS)
     public function store(Request $request)
     {
@@ -34,7 +59,16 @@ class AdminUsuarioController extends Controller
         $request->merge(['cedula_completa' => $cedulaCompleta]);
 
         $request->validate([
-            'cedula_completa' => 'required|unique:personas,CedulaPersona',
+            'cedula_completa' => [
+                'required', 
+                function ($attribute, $value, $fail) {
+                    // Validamos manualmente si YA TIENE USUARIO
+                    if (Usuario::where('CedulaPersonaUsuario_FK', $value)->exists()) {
+                        $fail('Esta persona ya tiene un usuario registrado en el sistema.');
+                    }
+                }
+            ],
+
             'nombres' => 'required|string|max:100',
             'apellidos' => 'required|string|max:100',
             'nombre_usuario' => 'required|string|max:100|unique:usuarios,NombreUsuario',
@@ -174,8 +208,7 @@ class AdminUsuarioController extends Controller
                     ]);
                 }
             }
-            // NOTA: Eliminamos el 'else { delete() }'. 
-            // Si pasa a Externo, la ficha de funcionario SE QUEDA en la BD para no romper el historial.
+        
 
             DB::commit();
             return redirect()->route('admin.usuarios.index')->with('success', 'Usuario actualizado correctamente.');

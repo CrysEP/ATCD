@@ -68,6 +68,7 @@ Route::middleware(['auth', 'can:es-admin'])->group(function () {
     
     Route::get('/admin/usuarios/{id}/editar', [AdminUsuarioController::class, 'edit'])->name('admin.usuarios.edit');
     Route::put('/admin/usuarios/{id}', [AdminUsuarioController::class, 'update'])->name('admin.usuarios.update');
+    Route::get('/admin/personas/buscar/{cedula}', [AdminUsuarioController::class, 'buscarPersona'])->name('admin.personas.buscar');
 
     // 2. Gestión de Solicitudes (Acciones Admin)
     Route::post('/solicitudes/{id}/actualizar-estado', [SolicitudController::class, 'updateStatus'])->name('solicitudes.updateStatus');
