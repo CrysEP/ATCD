@@ -4,6 +4,13 @@
 
 @section('content')
 
+
+@php
+    $esUAC = auth()->user()->RolUsuario == 'Administrador' || 
+             (auth()->user()->funcionarioData && auth()->user()->funcionarioData->departamento->NombreDepartamento == 'Unidad de Atención al Ciudadano');
+@endphp
+
+
     {{-- Alerta de éxito --}}
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
@@ -38,6 +45,7 @@
         </div>
 
         <div class="d-flex gap-2">
+      @if($esUAC)
             {{-- BOTÓN EDITAR --}}
             @if($solicitud->correspondencia->StatusSolicitud_FK != 7)
                 <a href="{{ route('solicitudes.edit', $solicitud->CodSolicitud) }}" class="btn btn-warning text-dark">
@@ -66,6 +74,7 @@
                     @csrf @method('PUT')
                 </form>
             @endif
+        @endif
 
             <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
                 &larr; Volver
@@ -196,13 +205,13 @@
             <div class="card shadow-sm border-0 position-sticky" style="top: 1.5rem;">
                 <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Relación Correspondencia</h5>
-                    @can ('es-admin')
-                        @if($solicitud->correspondencia->StatusSolicitud_FK != 7)
-                            <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#modalEditarFlujo">
-                                Editar
-                            </button>
-                        @endif
-                    @endcan
+                @if($esUAC) {{-- Solo UAC puede ver el botón de editar flujo --}}
+        @if($solicitud->correspondencia->StatusSolicitud_FK != 7)
+            <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#modalEditarFlujo">
+                Editar
+            </button>
+        @endif
+    @endif
                 </div>
                 
                 <div class="card-body p-4">
@@ -238,7 +247,7 @@
                 </div>
 
                 {{-- Acciones de Administrador --}}
-                @can('es-admin')
+             @if($esUAC)
                     @if($solicitud->correspondencia->StatusSolicitud_FK != 7)
                         <div class="card-footer p-4">
                             <h5 class="mb-3">Acciones</h5>
@@ -273,7 +282,8 @@
                             <small><i class="bi bi-slash-circle me-1"></i> Sin acciones disponibles (Anulada)</small>
                         </div>
                     @endif
-                @endcan 
+             @endif
+
             </div>
         </div>
     </div>

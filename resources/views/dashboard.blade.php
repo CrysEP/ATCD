@@ -73,7 +73,19 @@
                     <div class="card-body p-5">
                         <h4 class="card-title">No hay solicitudes activas</h4>
                         <p class="card-text">Todas las solicitudes han sido resueltas o no hay registros.</p>
-                        <a href="{{ route('solicitudes.create') }}" class="btn btn-primary">Registrar Nueva Solicitud</a>
+                      
+                        @php
+    $esUAC = auth()->user()->RolUsuario == 'Administrador' || 
+             (auth()->user()->funcionarioData && auth()->user()->funcionarioData->departamento->NombreDepartamento == 'Unidad de Atención al Ciudadano');
+@endphp
+
+@if($esUAC)
+    <a href="{{ route('solicitudes.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Registrar Nueva Solicitud
+    </a>
+@endif
+
+
                     </div>
                 </div>
             @endforelse

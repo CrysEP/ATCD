@@ -24,6 +24,29 @@ use App\Exports\HistorialExport;
 
 class SolicitudController extends Controller
 {
+
+// === 🛡️ FUNCIÓN DE SEGURIDAD ===
+    // Devuelve TRUE si es Admin o de la UAC. FALSE si es de otro departamento.
+    private function validarPermisosUAC()
+    {
+        $user = Auth::user();
+
+        // 1. Si es Administrador global, pase adelante.
+        if ($user->RolUsuario === 'Administrador') {
+            return true;
+        }
+
+        // 2. Si es Funcionario, verificamos que sea EXACTAMENTE de la UAC
+        if ($user->funcionarioData && 
+            $user->funcionarioData->departamento && 
+            $user->funcionarioData->departamento->NombreDepartamento === 'Unidad de Atención al Ciudadano') {
+            return true;
+        }
+
+        return false;
+    }
+
+
     public function index(Request $request)
     {
         $municipios = Municipio::orderBy('NombreMunicipio')->get();
