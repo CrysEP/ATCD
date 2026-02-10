@@ -25,7 +25,7 @@ use App\Exports\HistorialExport;
 class SolicitudController extends Controller
 {
 
-// === 🛡️ FUNCIÓN DE SEGURIDAD ===
+// ===  FUNCIÓN DE SEGURIDAD ===
     // Devuelve TRUE si es Admin o de la UAC. FALSE si es de otro departamento.
     private function validarPermisosUAC()
     {
@@ -36,7 +36,7 @@ class SolicitudController extends Controller
             return true;
         }
 
-        // 2. Si es Funcionario, verificamos que sea EXACTAMENTE de la UAC
+        // 2. Si es Funcionario, se verifica que sea EXACTAMENTE de la UAC
         if ($user->funcionarioData && 
             $user->funcionarioData->departamento && 
             $user->funcionarioData->departamento->NombreDepartamento === 'Unidad de Atención al Ciudadano') {
@@ -47,16 +47,53 @@ class SolicitudController extends Controller
     }
 
 
-    public function index(Request $request)
+public function index(Request $request)
     {
         $municipios = Municipio::orderBy('NombreMunicipio')->get();
 
         $query = Solicitud::query();
 
+        // 1. Filtro base: Solo mostrar solicitudes activas (Status 1)
         $query->whereHas('correspondencia', function ($q) {
             $q->where('StatusSolicitud_FK', 1);
         });
 
+        // =========================================================================
+        // 🛡️ LÓGICA DE VISIBILIDAD POR DEPARTAMENTO (LO NUEVO)
+        // =========================================================================
+        
+        $user = Auth::user();
+        
+        // Verificamos si es UAC o Administrador
+        $esUAC = false;
+        $esAdmin = $user->RolUsuario === 'Administrador';
+        $miDepartamentoId = null;
+
+        if ($user->funcionarioData && $user->funcionarioData->departamento) {
+            $miDepartamentoId = $user->funcionarioData->Departamento_FK;
+            
+            // Ajusta este nombre exactamente como esté en tu BD
+            if ($user->funcionarioData->departamento->NombreDepartamento === 'Unidad de Atención al Ciudadano') {
+                $esUAC = true;
+            }
+        }
+
+        // APLICAMOS EL FILTRO
+        if ($esAdmin || $esUAC) {
+            // Caso 1: Son los "Jefes" del sistema.
+            // No hacemos nada, ellos pueden ver TODAS las solicitudes.
+        } elseif ($miDepartamentoId) {
+            // Caso 2: Es un funcionario de otro departamento (ej: Ingeniería).
+            // Solo ve las solicitudes que le enviaron a él.
+            $query->where('DepartamentoDestino_FK', $miDepartamentoId);
+        } else {
+            // Caso 3: Usuario sin departamento o externo. 
+            // Por seguridad, no le mostramos nada.
+            $query->where('CodSolicitud', 0); 
+        }
+        // =========================================================================
+
+        // ... (A partir de aquí siguen tus filtros normales de búsqueda) ...
         if ($request->filled('tipo')) {
             $query->where('TipoSolicitudPlanilla', $request->tipo);
         }
@@ -68,17 +105,14 @@ class SolicitudController extends Controller
                 $q->where('CodMunicipio', $request->municipio_id);
             });
         }
-
         if ($request->filled('codigo_interno')) {
             $query->whereHas('correspondencia', function ($q) use ($request) {
                 $q->where('CodigoInterno', 'like', "%{$request->codigo_interno}%");
-            });}
-
-
+            });
+        }
         if ($request->filled('nro_uac')) {
             $query->where('Nro_UAC', 'like', "%{$request->nro_uac}%");
         }
-
         if ($request->filled('fecha_desde')) {
             $query->whereDate('FechaSolicitud', '>=', $request->fecha_desde);
         }
@@ -96,17 +130,15 @@ class SolicitudController extends Controller
                                 ->orWhere('ApellidosPersona', 'like', "%{$search}%")
                                 ->orWhere('CedulaPersona', 'like', "%{$search}%");
                   });
-            });  }
+            });
+        }
 
-            
-
-
-
-        $solicitudes = $query->with(['persona.parroquia.municipio', 'correspondencia.status'])
+        // Importante: Agregar 'departamentoDestino' al with() para optimizar
+        $solicitudes = $query->with(['persona.parroquia.municipio', 'correspondencia.status', 'departamentoDestino'])
                              ->orderBy('FechaSolicitud', 'desc')
                              ->paginate(20);
 
-
+        // Conteo para el dashboard
         $solicitudesHoy = Solicitud::whereDate('FechaSolicitud', now())
             ->whereHas('correspondencia', function ($q) {
                 $q->where('StatusSolicitud_FK', '!=', 7);
@@ -145,8 +177,10 @@ class SolicitudController extends Controller
                 'opciones' => ['Pasantías', 'Comisiones de Servicio', 'Sínstesis Curriculares', 'Gubernamental a la Corporación', 'Empresas', 'Otros']
             ],
         ];
+$departamentos = \App\Models\Departamento::orderBy('NombreDepartamento')->get();
 
-        return view('solicitudes.create', compact('tiposEnte', 'municipios', 'funcionario', 'categorias'));
+
+        return view('solicitudes.create', compact('tiposEnte', 'municipios', 'funcionario', 'categorias', 'departamentos'));
     }
 
     public function store(Request $request)
@@ -185,6 +219,7 @@ class SolicitudController extends Controller
             'CantidadDocumentosOriginal' => 'required|integer|min:0',
             'CantidadDocumentoCopia' => 'required|integer|min:0',
             'CantidadPaginasAnexo' => 'required|integer|min:0',
+            'departamento_destino_id' => 'required|exists:departamentos,CodDepartamento',
         ];
 
         $mensajes = [
@@ -232,6 +267,7 @@ class SolicitudController extends Controller
                 'Nro_UAC' => $nuevoUAC,
                 'Funcionario_FK' => auth()->user()->funcionarioData->CodFuncionario,
                 'TipoSolicitud_FK' => null,
+                'DepartamentoDestino_FK' => $request->departamento_destino_id,
             ]);
 
             $ente = TipoEnte::findOrFail($validatedData['tipo_ente']);
@@ -527,7 +563,9 @@ $anioActual = now()->year;
         $tipo_cedula_actual = substr($solicitud->persona->CedulaPersona, 0, 2); 
         $cedula_numero_actual = substr($solicitud->persona->CedulaPersona, 2);
 
-        return view('solicitudes.edit', compact('solicitud', 'tiposEnte', 'municipios', 'tipo_cedula_actual', 'cedula_numero_actual'));
+        $departamentos = \App\Models\Departamento::orderBy('NombreDepartamento')->get();
+
+        return view('solicitudes.edit', compact('solicitud', 'tiposEnte', 'municipios', 'tipo_cedula_actual', 'cedula_numero_actual', 'departamentos'));
     }
 
     public function update(Request $request, $id)
@@ -569,6 +607,9 @@ $anioActual = now()->year;
                 Rule::unique('relacion_correspondencia', 'CodigoInterno')->ignore($solicitud->correspondencia->CodigoInterno, 'CodigoInterno')
             ],
 
+
+            'departamento_destino_id' => 'required|exists:departamentos,CodDepartamento',
+
         ]);
 
         DB::beginTransaction();
@@ -598,6 +639,7 @@ $anioActual = now()->year;
                 'NivelUrgencia' => $validatedData['nivel_urgencia'],
                 'Nro_UAC' => $validatedData['nro_uac'],
                 'CedulaPersona_FK' => $cedulaCompleta, 
+                'DepartamentoDestino_FK' => $validatedData['departamento_destino_id'],
 
             ]);
 

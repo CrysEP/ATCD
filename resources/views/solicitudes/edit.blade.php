@@ -203,6 +203,19 @@
                             </select>
                         </div>
                         
+                        <div class="col-md-6 mb-3">
+        <label for="departamento_destino_id" class="form-label fw-bold">Departamento Asignado / Destino</label>
+        <select name="departamento_destino_id" id="departamento_destino_id" class="form-select" required>
+            <option value="">-- Seleccione --</option>
+            @foreach($departamentos as $depto)
+                <option value="{{ $depto->CodDepartamento }}" 
+                    @selected(old('departamento_destino_id', $solicitud->DepartamentoDestino_FK) == $depto->CodDepartamento)>
+                    {{ $depto->NombreDepartamento }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+                        
                         <div class="col-md-6">
                             <label class="form-label">Urgencia:</label>
                             <select class="form-select" name="nivel_urgencia">

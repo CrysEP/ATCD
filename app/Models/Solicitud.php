@@ -18,7 +18,8 @@ class Solicitud extends Model
         'TipoSolicitante', 'NivelUrgencia', 'FechaAtención', 'AnexaDocumentos',
         'CantidadDocumentosOriginal', 'CantidadDocumentoCopia', 'CantidadPaginasAnexo',
         'CedulaPersona_FK', 'Nro_UAC', 'CodigoInterno_FK', 'Funcionario_FK', 'TipoSolicitud_FK', 'SelloDigital',
-        'DirecciónHabitación','PuntoReferencia'
+        'DirecciónHabitación','PuntoReferencia',
+        'DepartamentoDestino_FK'
     ];
 
     protected $casts = [
@@ -92,4 +93,10 @@ public function correspondencia()
         // de ese modelo de correspondencia.
         return $this->correspondencia->status;
     }
+
+    public function departamentoDestino()
+{
+    return $this->belongsTo(Departamento::class, 'DepartamentoDestino_FK', 'CodDepartamento');
+}
+
 }

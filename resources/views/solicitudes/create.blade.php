@@ -179,6 +179,22 @@
     </select>
 </div>
 
+
+<div class="col-md-6">
+    <label class="form-label fw-bold">Departamento Asignado / Destino</label>
+    <select name="departamento_destino_id" class="form-select" required>
+        <option value="">-- Seleccione el Departamento --</option>
+        @foreach($departamentos as $depto)
+            <option value="{{ $depto->CodDepartamento }}" 
+                {{ old('departamento_destino_id') == $depto->CodDepartamento ? 'selected' : '' }}>
+                {{ $depto->NombreDepartamento }}
+            </option>
+        @endforeach
+    </select>
+    <div class="form-text">El departamento seleccionado será el encargado de gestionar esta solicitud.</div>
+</div>
+
+
 <div class="col-md-6">
     <label for="tipo_solicitud_planilla" class="form-label">Tipo de Planilla:</label>
     <select class="form-select" id="tipo_solicitud_planilla" name="tipo_solicitud_planilla" required>

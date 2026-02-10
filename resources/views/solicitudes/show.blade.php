@@ -122,6 +122,9 @@
                     <div class="row g-3">
                         <div class="col-md-6"><strong>Tipo (Planilla):</strong> {{ $solicitud->TipoSolicitudPlanilla }}</div>
                         <div class="col-md-6"><strong>Tipo Solicitante:</strong> {{ $solicitud->TipoSolicitante }}</div>
+
+                        <div class="col-12">
+        <strong>Departamento Asignado:</strong> <span class="badge bg-primary fs-6">{{ $solicitud->departamentoDestino->NombreDepartamento ?? 'Sin Asignar' }} </span></div>
                         
                         <div class="col-md-6"><strong>Fecha Solicitud (Planilla):</strong> {{ $solicitud->FechaSolicitud->format('d/m/Y h:i A') }}</div>
                         <div class="col-md-6"><strong>Fecha Atención (Recepción):</strong> {{ $solicitud->FechaAtención->format('d/m/Y h:i A') }}</div>
