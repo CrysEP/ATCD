@@ -671,6 +671,11 @@ $anioActual = now()->year;
 
     public function history(Request $request)
     {
+
+if (!$this->validarPermisosUAC()) {
+            return redirect()->route('dashboard')->with('error', 'Acceso denegado: No tienes permisos para ver el historial.');
+        }
+
         $municipios = Municipio::orderBy('NombreMunicipio')->get();
 
         $query = Solicitud::whereHas('correspondencia', function ($q) {
@@ -753,6 +758,11 @@ $anioActual = now()->year;
 
     public function anuladas(Request $request)
     {
+
+if (!$this->validarPermisosUAC()) {
+            return redirect()->route('dashboard')->with('error', 'Acceso denegado.');
+        }
+
         $solicitudes = Solicitud::whereHas('correspondencia', function ($q) {
             $q->where('StatusSolicitud_FK', 7);
         })
@@ -806,6 +816,9 @@ $anioActual = now()->year;
      */
     public function exportarZip(Request $request)
     {
+
+if (!$this->validarPermisosUAC()) return back()->with('error', 'Acceso denegado.');
+
         $request->validate([
             'fecha_desde_export' => 'required|date',
             'fecha_hasta_export' => 'required|date|after_or_equal:fecha_desde_export',
@@ -1125,6 +1138,10 @@ public function verArchivo($id)
     /** Exportar Historial filtrado a Excel*/
     public function exportarHistorialExcel(Request $request)
     {
+
+if (!$this->validarPermisosUAC()) return back()->with('error', 'Acceso denegado.');
+        return Excel::download(new HistorialExport($request->all()), 'Historial.xlsx');
+    
         // Pasamos todos los parámetros del request (filtros) al constructor del Export
         return Excel::download(new HistorialExport($request->all()), 'Historial_Solicitudes_' . now()->format('d-m-Y') . '.xlsx');
     }
@@ -1135,6 +1152,9 @@ public function verArchivo($id)
      */
     public function exportarHistorialPdf(Request $request)
     {
+
+if (!$this->validarPermisosUAC()) return back()->with('error', 'Acceso denegado.');
+
         // 1. Reutilizamos la lógica de filtros para obtener la misma data que ves en pantalla
         $query = Solicitud::query()->whereHas('correspondencia', function ($q) {
             $q->where('StatusSolicitud_FK', '!=', 1)

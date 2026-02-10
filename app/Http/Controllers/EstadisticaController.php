@@ -7,12 +7,31 @@ use App\Models\Solicitud;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel; 
-use App\Exports\EstadisticaExport;     
+use App\Exports\EstadisticaExport; 
+use Illuminate\Support\Facades\Auth;    
 
 class EstadisticaController extends Controller
 {
+
+private function validarPermisosUAC()
+    {
+        $user = Auth::user();
+        if ($user->RolUsuario === 'Administrador') return true;
+        if ($user->funcionarioData && 
+            $user->funcionarioData->departamento && 
+            $user->funcionarioData->departamento->NombreDepartamento === 'Unidad de Atención al Ciudadano') {
+            return true;
+        }
+        return false;
+    }
+
     public function index(Request $request)
     {
+
+if (!$this->validarPermisosUAC()) {
+            return redirect()->route('dashboard')->with('error', 'Acceso denegado: Solo la UAC puede ver estadísticas.');
+        }
+
         // Filtro de fecha (Por defecto: Hoy)
         $anio = $request->get('anio', Carbon::now()->year);
         $mes = $request->get('mes', Carbon::now()->month);
@@ -155,7 +174,7 @@ $municipiosAnio = DB::table('solicitudes')
             ->join('municipios', 'parroquias.Municipio_FK', '=', 'municipios.CodMunicipio')
             ->join('relacion_correspondencia', 'solicitudes.CodSolicitud', '=', 'relacion_correspondencia.Solicitud_FK')
             ->where('relacion_correspondencia.StatusSolicitud_FK', '!=', 7) // No anuladas
-            ->whereYear('FechaSolicitud', $anio) // <--- FILTRO DE AÑO
+            ->whereYear('FechaSolicitud', $anio) 
             ->select('municipios.NombreMunicipio', DB::raw('count(*) as total'))
             ->groupBy('municipios.NombreMunicipio')
             ->orderByDesc('total')
@@ -280,7 +299,7 @@ $municipiosAnio = DB::table('solicitudes')
         }
 
 
-        // === 17. NUEVO: TOTALES ANUALES POR MUNICIPIO (Para la leyenda) ===
+        // === 17. TOTALES ANUALES POR MUNICIPIO (Para la leyenda) ===
         $totalesAnualesPorMunicipio = DB::table('solicitudes')
             ->join('personas', 'solicitudes.CedulaPersona_FK', '=', 'personas.CedulaPersona')
             ->join('parroquias', 'personas.ParroquiaPersona_FK', '=', 'parroquias.CodParroquia')
@@ -333,6 +352,12 @@ $municipiosAnio = DB::table('solicitudes')
      * Descargar Excel del mes seleccionado*/
     public function exportarExcel(Request $request)
     {
+
+if (!$this->validarPermisosUAC()) {
+            return back()->with('error', 'Acceso denegado.');
+        }
+
+
         $mes = $request->mes;
         $anio = $request->anio;
         
@@ -342,6 +367,12 @@ $municipiosAnio = DB::table('solicitudes')
 
 public function dataCalendario()
 {
+
+if (!$this->validarPermisosUAC()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+
     // 1. Agrupar solicitudes por día
  $eventos = [];
 

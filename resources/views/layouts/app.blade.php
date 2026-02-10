@@ -23,28 +23,39 @@
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto">
-                        @auth
+                    @auth
+                            {{-- 1. UAC o Admin --}}
+                            @php
+                                $esUAC = Auth::user()->RolUsuario === 'Administrador' || 
+                                         (Auth::user()->funcionarioData && 
+                                          Auth::user()->funcionarioData->departamento && 
+                                          Auth::user()->funcionarioData->departamento->NombreDepartamento === 'Unidad de Atención al Ciudadano');
+                            @endphp
+
+                            {{-- Bandeja de entrada --}}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('dashboard') }}">Solicitudes Activas</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('solicitudes.create') }}">Nueva Solicitud</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('solicitudes.history') }}">Solicitudes Procesadas</a>
-                            </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('solicitudes.anuladas') }}">
-                                    <i class="bi bi-trash3"></i> Anuladas
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('estadisticas.index') }}">
-                                    <i class="bi bi-graph-up"></i> Estadísticas
-                                </a>
-                            </li>
+                            {{-- SOLO UAC: Registrar, Historial, Anuladas y Estadísticas --}}
+                            @if($esUAC)
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('solicitudes.create') }}">Nueva Solicitud</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('solicitudes.history') }}">Solicitudes Procesadas</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('solicitudes.anuladas') }}">
+                                        <i class="bi bi-trash3"></i> Anuladas
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('estadisticas.index') }}">
+                                        <i class="bi bi-graph-up"></i> Estadísticas
+                                    </a>
+                                </li>
+                            @endif
                         @endauth
                     </ul>
 
