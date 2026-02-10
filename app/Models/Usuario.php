@@ -19,7 +19,8 @@ class Usuario extends Authenticatable
         'ContraseniaUsuario', 
         'RolUsuario', 
         'EstadoUsuario',
-        'CedulaPersonaUsuario_FK'
+        'CedulaPersonaUsuario_FK',
+        'UltimoAccesoUsuario'
     ];
 
     protected $hidden = [

@@ -181,7 +181,7 @@
 
 
 <div class="col-md-6">
-    <label class="form-label fw-bold">Departamento Asignado / Destino</label>
+    <label class="form-label">Departamento Asignado / Destino</label>
     <select name="departamento_destino_id" class="form-select" required>
         <option value="">-- Seleccione el Departamento --</option>
         @foreach($departamentos as $depto)
