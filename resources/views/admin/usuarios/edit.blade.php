@@ -62,7 +62,7 @@
                                 <label class="form-label">Rol / Perfil</label>
                                 <select name="rol" id="rol_selector" class="form-select border-primary">
                                     <option value="UsuarioPersonal" {{ $usuario->RolUsuario == 'UsuarioPersonal' ? 'selected' : '' }}>Funcionario</option>
-                                    <option value="Externo" {{ $usuario->RolUsuario == 'Externo' ? 'selected' : '' }}>Externo</option>
+                                {{-- <option value="Externo">Externo (Ciudadano / Visitante)</option> --}} {{-- OCULTO POR AHORA --}}
                                     <option value="Administrador" {{ $usuario->RolUsuario == 'Administrador' ? 'selected' : '' }}>Administrador</option>
                                 </select>
                             </div>

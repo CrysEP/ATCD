@@ -135,7 +135,7 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
                                     <option value="" selected disabled>Seleccione el rol...</option>
                                     {{-- VALORES CORREGIDOS PARA COINCIDIR CON LA BD --}}
                                     <option value="UsuarioPersonal">Funcionario (Personal de CORPOINTA)</option>
-                                    <option value="Externo">Externo (Ciudadano / Visitante)</option>
+                               {{-- <option value="Externo">Externo (Ciudadano / Visitante)</option> --}} {{-- OCULTO POR AHORA --}}
                                     <option value="Administrador">Administrador del Sistema</option>
                                 </select>
                                 <div class="form-text">
@@ -185,14 +185,18 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
         const panelFuncionario = document.getElementById('panel_funcionario');
         const inputDepto = document.getElementById('departamento_id');
         const inputCargo = document.getElementById('cargo');
-
-        rolSelector.addEventListener('change', function() {
-            // CORREGIDO: Ahora comparamos con 'UsuarioPersonal'
-            if (this.value === 'UsuarioPersonal') {
+function toggleFuncionario() {
+            // AQUÍ ESTÁ EL CAMBIO: Aceptamos Funcionario O Administrador
+            if (rolSelector.value === 'UsuarioPersonal' || rolSelector.value === 'Administrador') {
+                
                 panelFuncionario.style.display = 'block';
+                panelFuncionario.classList.add('fade-in');
+                
+                // Opcional: Si quieres que para el Admin NO sea obligatorio, puedes poner otro if aquí dentro.
+                // Por ahora los dejamos obligatorios para ambos para mantener el orden.
                 inputDepto.required = true;
                 inputCargo.required = true;
-                panelFuncionario.classList.add('fade-in');
+
             } else {
                 panelFuncionario.style.display = 'none';
                 inputDepto.required = false;
@@ -200,7 +204,14 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
                 inputDepto.value = "";
                 inputCargo.value = "";
             }
-        });
+        }
+
+        // Ejecutamos al cambiar
+        rolSelector.addEventListener('change', toggleFuncionario);
+        
+        // Ejecutamos al iniciar (por si el navegador recuerda el valor al recargar)
+        toggleFuncionario();
+
     });
 </script>
 

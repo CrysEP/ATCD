@@ -84,6 +84,7 @@
                                     </form>
                                 </div>
                             </li>
+
                         @endguest
 
 
@@ -105,6 +106,19 @@
         </ul>
     </li>
 @endcan
+
+
+                            <li class="nav-item">
+    <a class="nav-link fw-bold " 
+       href="{{ asset('manuales/manual_usuario.pdf') }}" 
+       target="_blank" 
+       data-bs-toggle="tooltip" 
+       data-bs-placement="bottom" 
+       title="Descargar Manual de Usuario">
+        <i class="bi bi-question-circle-fill"></i> Ayuda / Manual
+    </a>
+</li>
+
 
                     </ul>
 
